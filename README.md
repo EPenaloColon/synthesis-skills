@@ -1,95 +1,124 @@
 # Synthesis Skills
 
-Reusable AI agent skills built on the [Agent Skills](https://agentskills.io) open standard. Install proven methodology directly into your AI coding assistant's workflow.
+Proven AI agent skills for code review, content creation, project management, and more. Built on the [Agent Skills](https://agentskills.io) open standard.
 
-## What are Synthesis Skills?
+## Install
 
-Synthesis Skills are portable, shareable instruction packages that teach AI coding assistants *how* to do things well — content creation, code review, project management, quality assurance, and more. They encode the methodology behind [synthesis coding](https://synthesiscoding.org) and [synthesis engineering](https://rajiv.com) into a format that works across AI platforms.
-
-Each skill follows the [Agent Skills open standard](https://agentskills.io), which means they work with Claude Code, Cursor, OpenAI Codex CLI, GitHub Copilot, and other compatible tools.
-
-## Installation
-
-### Claude Code (CLI, VS Code, or Desktop)
-
-Install a single skill:
+**One command — installs all 22 skills to every AI agent on your machine:**
 
 ```bash
-claude skill install rajivpant/synthesis-skills/[skill-name]
+npx skills add rajivpant/synthesis-skills --global --all --copy
 ```
 
-Or clone the repo and symlink skills you want:
+This works with Claude Code, Cursor, Codex CLI, GitHub Copilot, and [40+ other agents](https://agentskills.io).
+
+### No Node.js? Use the shell installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rajivpant/synthesis-skills/main/install.sh | sh
+```
+
+Or clone and run directly:
 
 ```bash
 git clone https://github.com/rajivpant/synthesis-skills.git
-ln -s /path/to/synthesis-skills/[skill-name] ~/.claude/skills/[skill-name]
+cd synthesis-skills
+./install.sh install
 ```
 
-### Other platforms
+### Update / Uninstall
 
-Skills follow the Agent Skills standard (`SKILL.md` with YAML frontmatter). Most AI coding assistants that support the standard will auto-discover skills placed in their expected directories. Consult your tool's documentation for skill installation paths.
+```bash
+# Update to latest
+npx skills update
+# Or: ./install.sh update
 
-## Available skills
+# Uninstall
+npx skills remove synthesis-skills
+# Or: ./install.sh uninstall
+```
 
-Skills are organized by domain. Each skill directory contains a `SKILL.md` with instructions and optional `references/`, `scripts/`, and `assets/` subdirectories.
-
-*Skill directories will be populated as runbooks are converted. Check back or watch the repo for updates.*
+## Available Skills
 
 ### Engineering
-- Code review, PR review, multi-contributor integration
+| Skill | Description |
+|-------|-------------|
+| `codebase-review` | Enterprise-scale codebase audit with tiered review system |
+| `pr-review` | Delta review methodology for pull requests, including security scanning and AI-analysis verification |
+| `multi-contributor-synthesis-coding` | Adopt-and-adapt integration pattern with cherry-pick safety and regression verification |
+| `code-generation` | Structured multi-approach code generation (background instruction) |
 
-### Content creation
-- Thought leadership articles, social media, blog promotion, hyperlink research
+### Content Creation
+| Skill | Description |
+|-------|-------------|
+| `thought-leadership-writing` | Two-phase workflow: research/validation then strategic writing |
+| `content-promotion` | Strategic content promotion across social media platforms |
+| `social-media-post` | Social media post template for multiple platforms |
+| `blog-promotion` | Blog post promotion template |
+| `hyperlink-research` | Find authoritative links for people, organizations, and entities |
 
-### Content enhancement
-- AI content quality (detection and improvement), fact-checking, blog revitalization
+### Content Enhancement
+| Skill | Description |
+|-------|-------------|
+| `ai-content-quality` | 27-point quality framework for AI-assisted content |
+| `fact-checking` | Systematic fact-check process with multi-source confidence framework |
+| `blog-revitalization` | Revitalize old blog posts while maintaining temporal integrity |
 
 ### Communication
-- Message condensation (the "High-Five Habit")
+| Skill | Description |
+|-------|-------------|
+| `message-condensation` | High-Five Habit framework — condense messages to 5 sentences or less |
 
-### Project management
-- Context lifecycle, synthesis project management
+### Project Management
+| Skill | Description |
+|-------|-------------|
+| `context-lifecycle` | Three-tier context architecture for managing AI working memory |
+| `synthesis-project-management` | Lightweight PM system for human-agent collaboration |
 
-### System configuration
-- LLM project setup, code generation patterns
+### Synthesis Engineering
+| Skill | Description |
+|-------|-------------|
+| `synthesis-content-framing` | Content framing methodology with topic, sophistication, and engagement gates |
 
-## How skills work
+### Reasoning & Templates
+| Skill | Description |
+|-------|-------------|
+| `tree-of-thought` | Multi-expert collaborative reasoning technique |
+| `llm-project-setup` | Configure Claude Projects, ChatGPT GPTs, and Gemini Gems |
+| `creative-writer-setup` | Configure an LLM as a creative writer assistant |
+| `technical-advisor-setup` | Configure an LLM as a technical advisor |
 
-Skills use progressive disclosure to minimize token cost:
+### Background Instructions
+| Skill | Description |
+|-------|-------------|
+| `anti-watermarking` | Produce clean text without AI watermarking patterns |
+| `response-synthesis` | Combine multiple LLM responses into one unified document |
 
-1. **Tier 1** (always loaded): skill name + description (~50 tokens) — used for matching
-2. **Tier 2** (loaded when triggered): `SKILL.md` body (<500 lines) — the actual instructions
-3. **Tier 3** (loaded on demand): reference files, scripts, assets — detailed material
+## How Skills Work
 
-When you ask your AI assistant to do something that matches a skill's description, the skill loads automatically. You can also invoke skills explicitly.
+Skills use progressive disclosure:
 
-### Defaults and overrides
+1. **Tier 1** (always loaded): name + description (~50 tokens) — matches your requests
+2. **Tier 2** (on activation): SKILL.md body — the actual instructions
+3. **Tier 3** (on demand): reference files for detailed material
 
-Public skills are self-contained — they work without any personal configuration. Each skill that involves writing or style includes a `references/voice-defaults.md` with sensible defaults.
-
-If you have personal preferences in your `CLAUDE.md` (or equivalent configuration), skills will respect those as overrides. Your identity configuration takes precedence over skill defaults.
+When you ask your AI assistant to do something that matches a skill's description, it loads automatically. Skills that involve writing or style include defaults that work standalone — if you have personal preferences in your CLAUDE.md, those override the defaults.
 
 ## Licensing
 
-This repository uses a dual-license structure:
+- **[CC0 1.0](LICENSE-CC0)** — methodology and content skills (no attribution required)
+- **[Apache 2.0](LICENSE-APACHE)** — skills with executable scripts
 
-- **[CC0 1.0 Universal](LICENSE-CC0)** — for methodology and content skills (the majority). Use them however you want, no attribution required.
-- **[Apache License 2.0](LICENSE-APACHE)** — for skills containing executable scripts or code. Standard open-source terms apply.
+## Part of the Synthesis Engineering Ecosystem
 
-Each skill directory contains a `LICENSE` file indicating which license applies.
-
-## Part of the Synthesis Engineering ecosystem
-
-Synthesis Skills are one component of a broader methodology:
-
-- **[Synthesis coding](https://synthesiscoding.org)** — AI-assisted software development practices
-- **[Synthesis engineering](https://rajiv.com)** — the broader methodology for human-AI collaboration
+- **[Synthesis coding](https://synthesiscoding.org)** — AI-assisted software development
+- **[Synthesis engineering](https://rajiv.com)** — broader human-AI collaboration methodology
 - **[Agent Skills standard](https://agentskills.io)** — the open format these skills use
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing skills.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Author
 
-[Rajiv Pant](https://rajiv.com) — technology executive, AI practitioner, and creator of synthesis coding methodology.
+[Rajiv Pant](https://rajiv.com) — technology executive, AI practitioner, and creator of synthesis coding.
