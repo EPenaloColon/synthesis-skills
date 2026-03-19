@@ -26,6 +26,12 @@ cd synthesis-skills
 ./install.sh install
 ```
 
+### Install specific skills only
+
+```bash
+npx skills add rajivpant/synthesis-skills --global --copy --skill pr-review,codebase-review,fact-checking
+```
+
 ### Update / Uninstall
 
 ```bash
@@ -37,6 +43,10 @@ npx skills update
 npx skills remove synthesis-skills
 # Or: ./install.sh uninstall
 ```
+
+### Note on skill names
+
+Synthesis Skills use short, descriptive names (`pr-review`, `fact-checking`). If you have skills from other repos with the same names, install selectively using `--skill` to choose which you want. The `npx skills` CLI tracks provenance to help manage this.
 
 ## Available Skills
 
