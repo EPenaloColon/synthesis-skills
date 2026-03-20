@@ -4,7 +4,7 @@ Proven AI agent skills for code review, content creation, project management, an
 
 ## Install
 
-**One command — installs all 20 skills to every AI agent on your machine:**
+**One command — installs all 22 skills to every AI agent on your machine:**
 
 ```bash
 npx skills add rajivpant/synthesis-skills --global --all --copy
@@ -84,10 +84,16 @@ All skills are prefixed with `synthesis-` to prevent namespace collisions with s
 ### Reasoning & Templates
 | Skill | Description |
 |-------|-------------|
+| `synthesis-thinking-framework` | Four-mode thinking methodology: first principles → systems → complexity → design |
 | `synthesis-tree-of-thought` | Multi-expert collaborative reasoning technique |
 | `synthesis-llm-setup` | Configure Claude Projects, ChatGPT GPTs, and Gemini Gems |
 | `synthesis-creative-writer` | Creative writer persona template |
 | `synthesis-technical-advisor` | Technical advisor persona template |
+
+### DevOps & Sync
+| Skill | Description |
+|-------|-------------|
+| `synthesis-mac-sync` | Multi-Mac config sync via iCloud with git repo sync and machine inventory |
 
 ### Background Instructions
 | Skill | Description |
@@ -109,6 +115,10 @@ When you ask your AI assistant to do something that matches a skill's descriptio
 
 - **[CC0 1.0](LICENSE-CC0)** — methodology and content skills (no attribution required)
 - **[Apache 2.0](LICENSE-APACHE)** — skills with executable scripts
+
+## Learn More
+
+Read the launch article: [Synthesis Skills: Install Methodology Into Your AI Workflow](https://synthesiscoding.org/articles/synthesis-skills-install-methodology-into-your-ai-workflow/)
 
 ## Part of the Synthesis Engineering Ecosystem
 

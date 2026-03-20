@@ -4,6 +4,22 @@ All notable changes to Synthesis Skills are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers follow [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-03-19
+
+### Added
+- **`synthesis-thinking-framework`** — new skill: four-mode thinking methodology (first principles → systems → complexity → design) with pre-response protocol
+- **`synthesis-mac-sync`** — new skill: multi-Mac configuration sync via iCloud with git repo sync, machine inventory, and one-time action system
+
+### Changed
+- **`synthesis-pr-review`** bumped to v1.1.0 — 6 improvements from CSA review sprint:
+  - Project-specific extension points (convention debt patterns, CLAUDE.md hooks)
+  - Scope governance check (PR title vs. actual file scope)
+  - Bundled test file detection
+  - Structured review comment format with severity labels ([M1], [S1], [C1], [N1])
+  - AI-assisted review verification step
+  - Post-merge verification reference (generic extension point)
+- **README** — added "Learn More" link to launch blog post, updated skill count to 22
+
 ## [2.0.0] - 2026-03-18
 
 ### Changed (BREAKING)

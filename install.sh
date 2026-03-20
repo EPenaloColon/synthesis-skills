@@ -103,7 +103,7 @@ do_uninstall() {
         SKILL_NAMES=$(our_skill_names)
     else
         # Fallback: list of known synthesis-skills names
-        SKILL_NAMES="synthesis-article-writing synthesis-blog-refresh synthesis-clean-text synthesis-code-integration synthesis-code-planning synthesis-codebase-review synthesis-concise-messaging synthesis-content-distribution synthesis-content-framing synthesis-content-quality synthesis-context-lifecycle synthesis-creative-writer synthesis-fact-checking synthesis-link-research synthesis-llm-setup synthesis-pr-review synthesis-project-management synthesis-response-merger synthesis-technical-advisor synthesis-tree-of-thought"
+        SKILL_NAMES="synthesis-article-writing synthesis-blog-refresh synthesis-clean-text synthesis-code-integration synthesis-code-planning synthesis-codebase-review synthesis-concise-messaging synthesis-content-distribution synthesis-content-framing synthesis-content-quality synthesis-context-lifecycle synthesis-creative-writer synthesis-fact-checking synthesis-link-research synthesis-llm-setup synthesis-mac-sync synthesis-pr-review synthesis-project-management synthesis-response-merger synthesis-technical-advisor synthesis-thinking-framework synthesis-tree-of-thought"
     fi
 
     for target in $TARGETS; do
