@@ -1,20 +1,20 @@
 ---
 name: synthesis-article-writing
 description: >
-  Two-phase workflow for creating high-quality thought leadership articles: research and validation
-  followed by strategic writing. Use when exploring a book, concept, or trend and connecting it
-  to your expertise.
+  Three-phase workflow for creating high-quality thought leadership articles: research and
+  validation, strategic writing, and pre-publication critical review. Includes anonymization
+  protocol, credibility assessment, substance density checks, and engagement optimization.
   Use when asked to: write article, thought leadership, blog post, article workflow, write blog,
   draft article, create thought piece, write opinion piece, leadership article.
 license: "CC0-1.0"
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "2.0.0"
 ---
 
 # Article Writing
 
-A two-phase workflow for creating high-quality thought leadership articles: research/validation followed by strategic writing. Use when exploring a book, concept, or trend and connecting it to your expertise.
+A three-phase workflow for creating high-quality thought leadership articles: research/validation, strategic writing, and pre-publication critical review. Use when exploring a book, concept, or trend and connecting it to your expertise.
 
 ---
 
@@ -190,19 +190,33 @@ Craft an authentic, insightful article that:
 - Good: "As I wrote when introducing [project], the key to useful AI assistants is..."
 - Bad: "To learn more about AI assistants, see this post."
 
-### Ethical Storytelling
+### Ethical Storytelling and Anonymization
 
-**Permitted:**
-- Composite examples reflecting real patterns
-- "At a previous company..." without naming which
-- Lessons learned across multiple similar situations
-- Teaching stories that convey operational truths
+**CRITICAL: Name removal is NOT anonymization.** Removing company names while keeping the scenario, specific numbers, stakeholder dynamics, vocabulary, and industry context creates a fingerprint that names are the least important part of. The scenario IS the identifier.
 
-**Not Permitted:**
-- Naming specific employers in disputable anecdotes
-- Attributing quotes to real individuals without verification
-- Inventing technical achievements
-- Creating scenarios inconsistent with public record
+**Before using any real example, apply all four tests:**
+
+1. **Outsider test:** A stranger reads this. Could they narrow it to a small set of companies or situations?
+2. **Insider test:** Someone who knows your work reads this. Does the example confirm something they suspected but couldn't prove? Does it reveal an internal decision that was meant to stay internal?
+3. **Adversary test:** A reporter or competitor reads this. Could this become evidence or ammunition?
+4. **Irony test:** Does publishing this example undermine the very thing the example describes protecting?
+
+If ANY test fails, the example cannot be used regardless of whether names are removed.
+
+**Especially dangerous: Operational decisions as teaching material.** If a decision was made to manage risk (changing terminology, restructuring a team, pivoting a strategy), describing it publicly re-creates the risk. An article about careful language choices that reveals you made those choices is self-defeating.
+
+**Safe example sources:**
+- The author's personal methodology and tools (already public)
+- Publicly known examples from other companies (with attribution)
+- Genuinely universal patterns that don't map to specific companies
+- Fictional scenarios clearly marked as illustrative
+- Examples where the specifics have been transformed, not just redacted (change the industry, the stakeholder type, the numbers, and the vocabulary simultaneously)
+
+**Not safe, even without names:**
+- Internal product strategy decisions with specific numbers
+- Risk mitigation choices where the risk itself is sensitive
+- Stakeholder dynamics that fingerprint a specific situation
+- Vocabulary changes that map to known products
 
 ### Output Deliverables
 
@@ -224,3 +238,70 @@ The article succeeds if:
 - Multiple hyperlinks prove authenticity
 - It is useful to any leader thinking about this topic
 - The author would be proud to have their name on it
+
+---
+
+## Phase 3: Pre-Publication Critical Review
+
+After the draft is complete, review it critically through these lenses before publishing. This phase exists because a draft can be well-written, factually accurate, and still damage the author's reputation or expose confidential information.
+
+### 1. Credibility and Positioning
+
+**Does this make the author look like a deeply experienced expert?**
+
+- Read every anecdote from the perspective of a skeptical peer. Does any story position the author as someone who made an avoidable mistake rather than someone who discovered a non-obvious insight?
+- Vulnerability is strategic when it demonstrates wisdom earned. It backfires when it reveals carelessness.
+- Test: "Would a senior leader in my field read this and think 'that happened because they didn't have basic guardrails'?" If yes, reframe the story to show what was being deliberately tested or explored, or replace it.
+
+### 2. Substance Density
+
+**Is there real, valuable substance in every paragraph?**
+
+- Read each paragraph and ask: what does the reader learn here that they didn't know before? If the answer is "nothing" or "a restatement of the previous point," cut or compress.
+- Watch for warm-up paragraphs that delay the insight, setup sentences that state the obvious, and summary paragraphs that repeat what was just said.
+- Common offenders: "AI agents are capable of extraordinary work" (everyone knows this), "No component exists in isolation" (textbook truism), "The user is not an abstraction" (platitude preceding a good example that doesn't need it).
+
+### 3. Insight Quality
+
+**Does this article contain at least one idea the reader hasn't encountered before?**
+
+- An insight reframes how the reader thinks. It's not a fact, it's a shift in perspective.
+- Test: after reading each section, can you articulate a specific new mental model, distinction, or principle the reader now has? If a section only restates established ideas, it needs either a novel angle or a novel example.
+
+### 4. Engagement and Shareability
+
+**Would someone share this because of what's in it, not just because they know the author?**
+
+- Is there a "gem" moment — a sentence or passage so striking that people would screenshot it?
+- Are there pull quotes (3-4 blockquoted passages) that work as standalone tweetable insights?
+- Does the opening hook signal the article's actual scope? A small-sounding hook for a big-scope article will lose readers who assume the piece is about the small thing.
+- Does the article have structural variety? If every section follows the same template (definition → example → another example → non-technical example), readers will start skimming by section 3.
+
+### 5. Title Magnetism
+
+**Would someone click this title in a feed?**
+
+- Descriptive titles are searchable. Provocative titles get clicked. The best titles are both.
+- Test: does the title make you curious, or does it just describe the contents? "Five Modes of Reasoning for Human-AI Collaboration" describes. "Five Modes for Thinking Across Boundaries" intrigues slightly more. The ideal title makes the reader think "I want to know what that means."
+
+### 6. Confidentiality and Exposure (CRITICAL)
+
+**Run the full anonymization protocol from the Ethical Storytelling section above.**
+
+- For every real example: apply all four tests (outsider, insider, adversary, irony)
+- For every "anonymized" example: verify that the scenario itself isn't a fingerprint
+- For every operational decision described: ask whether describing it publicly re-creates the risk it was designed to mitigate
+
+### 7. Limitations and Honesty
+
+**Does the article acknowledge where its claims fail?**
+
+- A framework presented without limitations reads as oversold. One paragraph on "when this doesn't apply" builds more credibility than ten paragraphs of advocacy.
+- Test: if a smart, skeptical reader asks "but what about...?" — does the article already have an answer?
+
+### 8. AI Slop Final Pass
+
+**Run the synthesis-content-quality framework (32-point check) on the final draft.**
+
+- Pay special attention to: hyperbolic subheadings, borrowed canonical examples (jet engine/market, bus route nobody rides), dramatic fragment construction, section-ending summaries.
+- Check that pull quotes exist and are placed for visual rhythm across the article's length.
