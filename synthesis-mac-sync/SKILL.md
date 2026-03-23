@@ -16,6 +16,17 @@ A methodology for keeping multiple Macs in sync using iCloud for configuration f
 
 This skill provides the **protocol** — the sync methodology, safety rules, conflict resolution, and manifest format. Your personal **config file** (a README or manifest in your iCloud sync folder) provides the specifics: which files, which machines, which repos.
 
+## Configuration
+
+These values are user-specific. Update them for your environment.
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `icloud_sync_folder` | `~/Library/Mobile Documents/com~apple~CloudDocs/workspaces/[username]/mac-sync/` | iCloud Drive folder for synced config files |
+| `git_scan_root` | `~/projects/` | Root directory for git repository discovery |
+| `git_scan_max_depth` | `4` | Maximum depth for recursive `.git` directory search |
+| `git_repos_manifest` | `git-repos.yaml` | Manifest file caching discovered repos |
+
 ---
 
 ## Architecture

@@ -14,6 +14,17 @@ metadata:
 
 A lightweight project management system designed for human-agent collaboration. Optimized for context preservation across conversation sessions and context compaction events.
 
+## Configuration
+
+These values are user-specific. Update them for your environment.
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `ai_knowledge_workspace` | `ai-knowledge-{workspace}` | Root directory for your ai-knowledge repo (e.g., `ai-knowledge-rajiv`) |
+| `projects_path` | `projects/` | Directory within the workspace for all project folders |
+| `index_file` | `projects/index.yaml` | Single index file for all projects |
+| `lessons_path` | `projects/_lessons/` | Cross-project lessons and patterns directory |
+
 ---
 
 ## Design Principles
