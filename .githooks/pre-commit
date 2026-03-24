@@ -1,0 +1,137 @@
+#!/bin/bash
+#
+# Repo-specific pre-commit hook for synthesis-skills (PUBLIC repo)
+#
+# This is Layer 2 — called by the global hook (~/.git-hooks/pre-commit)
+# after universal checks pass.
+#
+# Purpose: Prevent leaking confidential names, private skill references,
+# internal URLs, or client-specific details into this open source repo.
+#
+# The risk: When editing public skills while thinking about private/shared
+# ones, it's easy to reference a private skill by name, mention a client,
+# or include an internal URL. This hook catches those before they ship.
+#
+
+set -euo pipefail
+
+# ── Confidential company/client names ────────────────────────────────
+# These should NEVER appear in a public repo.
+# Use "example-client" or "example-company" instead.
+
+CONFIDENTIAL_NAMES=(
+    'mcclatchy'
+    'hearst'
+    'scalepost'
+    'snapshot'
+    'trustguard'
+    'flatiron'
+    'tgorg-ai'
+    'trendhunter'
+    'trend.hunter'
+    'assuredintel'
+    'assured.intel'
+)
+
+# ── Private/shared skill names ───────────────────────────────────────
+# Skills from synthesis-skills-rajiv or synthesis-skills-mcclatchy
+# should never be referenced by name in the public repo.
+
+PRIVATE_SKILL_NAMES=(
+    'synthesis-skills-rajiv'
+    'synthesis-skills-mcclatchy'
+    'synthesis-article-publishing'
+    'synthesis-author-bios'
+    'synthesis-blog-refresh-personal'
+    'synthesis-content-series'
+    'synthesis-content-strategy'
+    'synthesis-daily-rituals'
+    'synthesis-ea-collaboration'
+    'synthesis-facebook-birthday'
+    'synthesis-intellectual-foundation'
+    'synthesis-linkedin-engagement'
+    'synthesis-personalized-demo'
+    'synthesis-reddit-engagement'
+    'synthesis-social-media-strategy'
+    'release-process'
+    'synthesis-merge-verification'
+)
+
+# ── Internal URLs ────────────────────────────────────────────────────
+
+INTERNAL_URLS=(
+    'bitbucket\.org/mcclatchyco'
+    'github\.com/FlatironSoftwareCorp'
+    'github\.com/Trend-Hunter'
+    'trendhunteragents\.ai'
+    'csa\.mcclatchy\.com'
+    'csa-dev\.mcclatchy\.com'
+    'ragenie\.ai'
+    'ai-knowledge-rajiv'
+    'ai-knowledge-mcclatchy'
+    'ai-knowledge-flatiron'
+)
+
+# ── Build combined pattern ───────────────────────────────────────────
+
+PATTERN=""
+for p in "${CONFIDENTIAL_NAMES[@]}" "${PRIVATE_SKILL_NAMES[@]}" "${INTERNAL_URLS[@]}"; do
+    if [ -z "$PATTERN" ]; then
+        PATTERN="$p"
+    else
+        PATTERN="$PATTERN|$p"
+    fi
+done
+
+# Check staged changes (added/modified content only)
+MATCHES=$(git diff --cached --diff-filter=AM -U0 | grep '^+' | grep -v '^+++' | grep -i -E "$PATTERN" | head -20) || true
+
+if [ -n "$MATCHES" ]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════════╗"
+    echo "║  ⚠️  PUBLIC REPO LEAK DETECTED (synthesis-skills hook)            ║"
+    echo "╚══════════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "This is a PUBLIC open source repo. The following content should"
+    echo "not be here:"
+    echo ""
+    echo "$MATCHES"
+    echo ""
+    echo "Common fixes:"
+    echo "  - Replace client names with 'example-client'"
+    echo "  - Remove references to private/shared skills by name"
+    echo "  - Remove internal URLs"
+    echo ""
+    echo "If this is intentional (e.g., generic mention in documentation):"
+    echo "  git commit --no-verify"
+    echo ""
+    exit 1
+fi
+
+# Also check commit message
+COMMIT_MSG_FILE=""
+if [ -f ".git/COMMIT_EDITMSG" ]; then
+    COMMIT_MSG_FILE=".git/COMMIT_EDITMSG"
+elif [ -f "$(git rev-parse --git-dir)/COMMIT_EDITMSG" ]; then
+    COMMIT_MSG_FILE="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
+fi
+
+if [ -n "$COMMIT_MSG_FILE" ] && [ -f "$COMMIT_MSG_FILE" ]; then
+    MSG_MATCHES=$(grep -i -E "$PATTERN" "$COMMIT_MSG_FILE" | head -10) || true
+    if [ -n "$MSG_MATCHES" ]; then
+        echo ""
+        echo "╔══════════════════════════════════════════════════════════════════╗"
+        echo "║  ⚠️  COMMIT MESSAGE LEAK (synthesis-skills hook)                  ║"
+        echo "╚══════════════════════════════════════════════════════════════════╝"
+        echo ""
+        echo "Confidential content found in commit message:"
+        echo ""
+        echo "$MSG_MATCHES"
+        echo ""
+        echo "Rewrite the commit message without confidential references."
+        echo ""
+        exit 1
+    fi
+fi
+
+exit 0
