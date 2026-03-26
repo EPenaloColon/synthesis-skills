@@ -2,10 +2,8 @@
 name: synthesis-slack-sync
 description: "Slack channel sync protocol for AI-assisted workflows. Reads channels and threads via Slack MCP, saves to local transcript files, and updates daily action plans. Handles mid-day re-syncs with thread staleness detection. Use when asked to: slack sync, sync from slack, check slack, read channels, sync messages, sync transcripts, what's new on slack."
 license: "CC0-1.0"
-depends_on:
-  - synthesis-daily-rituals
-  - synthesis-project-management
 metadata:
+  depends_on: "synthesis-daily-rituals, synthesis-project-management"
   author: "Rajiv Pant"
   version: "1.0.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
@@ -198,7 +196,7 @@ When a channel message references or continues an earlier discussion (broadcast 
 ## When This Skill Runs
 
 This skill is invoked:
-- **By the user** typing `/slack-sync` or "sync from Slack" or similar
+- **By the user** typing `/synthesis-slack-sync` or "sync from Slack" or similar
 - **By `synthesis-daily-rituals`** during Day-Start (Step 2: Sync), Mid-Day Sync, and Day-End (Step 1: Transcript Sync)
 - **Before drafting any Slack reply** — the daily-rituals skill requires re-reading the actual thread before drafting, to avoid stale-information replies
 
