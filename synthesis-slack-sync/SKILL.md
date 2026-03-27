@@ -119,6 +119,7 @@ Only check DMs that have active conversations. Don't read every DM — the confi
 - **Mark sent messages as SENT** with timestamps. Cross-reference messages the user sent against draft messages in the action plan.
 - **Update waiting-on-others** table with any new information from thread replies.
 - **Note new action items** or signals worth responding to in the "Things to Know" section.
+- **Draft replies with grounding research.** When a Slack message requires a response (technical question, status request, bug report), research the answer in primary sources (source code, config files, PRs, deploy scripts, running systems) BEFORE drafting. Never draft a reply based solely on transcripts or conversation memory. The user's credibility depends on accuracy.
 - **Do NOT remove content** from the action plan — it is append-only (mark done, don't delete).
 
 ---
