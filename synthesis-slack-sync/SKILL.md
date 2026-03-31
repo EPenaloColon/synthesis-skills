@@ -5,7 +5,7 @@ license: "CC0-1.0"
 metadata:
   depends_on: "synthesis-daily-rituals, synthesis-project-management"
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
   source_type: "public"
 ---
@@ -77,11 +77,17 @@ slack_read_channel(channel_id, oldest=LAST_SYNC_TIMESTAMP, limit=30)
 - On **subsequent syncs**: use the timestamp of the last sync recorded in the transcript file.
 - Note the **reply count** on every message that has threads. These will be re-read in Step 2.
 
-### Step 2: Re-read ALL threads with replies from today
+### Step 2: Re-read ALL active threads — today AND recent days
 
 **This is the most important step. It is the step that gets skipped and causes missed messages.**
 
-For every message in today's transcript that shows a thread (reply count > 0):
+Thread replies do NOT appear as channel-level messages. The only way to detect them — including the user's own replies — is to re-read threads. This step must cover three sources of active threads:
+
+**Source A: Threads in today's transcript.** For every message in today's transcript that shows a thread (reply count > 0), re-read the full thread.
+
+**Source B: Threads from yesterday's transcript that may have new replies.** Open the previous day's transcript file. For every thread that was active (had replies), re-read it. This catches: overnight replies, the user's own replies to threads from yesterday, and continuing conversations that span days.
+
+**Source C: Threads surfaced by Step 1.** Any message returned by Step 1 that shows "Thread: N replies" must be re-read, even if the parent message is from a previous day. Channel reads return messages in reverse chronological order — a thread from 3 days ago can appear in the channel read if it had recent activity.
 
 ```
 slack_read_thread(channel_id, message_ts=PARENT_TS)
@@ -90,10 +96,15 @@ slack_read_thread(channel_id, message_ts=PARENT_TS)
 Rules:
 - **Never use the `oldest` parameter on thread reads.** It causes missed replies. Read the full thread every time.
 - **Compare the reply count and latest reply timestamp** against what's in the local transcript.
-- **If new replies exist**, append them to the transcript.
+- **If new replies exist**, append them to today's transcript (even if the parent message is from a previous day).
 - **If the user sent a message** in a thread, it does NOT appear as a new channel-level message. The only way to detect it is to re-read the thread. If this step is skipped, the action plan shows drafts as "unsent" when the user already sent them.
 
-**Mechanical check:** Before reporting "no new messages" for any sync, verify that every thread TS in today's transcript was re-read and reply counts match.
+**Mechanical check:** Before reporting "no new messages" for any sync, verify that:
+1. Every thread TS in today's transcript was re-read and reply counts match.
+2. Every active thread from yesterday's transcript was re-read for new replies.
+3. Every thread indicator from Step 1 channel reads was followed.
+
+**Why Source B matters:** On 2026-03-31, the user replied to an engineer's thread from the previous night. The reply didn't appear as a channel-level message. Because the thread was from the previous day and not in today's transcript, the sync missed it entirely — the daily plan showed the draft as unsent when the user had already sent it.
 
 ### Step 3: Check DMs
 
