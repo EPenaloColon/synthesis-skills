@@ -257,7 +257,7 @@ This file contains the full detailed review checklist for the synthesis-codebase
 ### 7.1 Test Existence
 
 - [ ] Essential: **Tests Exist** — There are automated tests
-- [ ] Essential: **Tests Pass** — All tests pass
+- [ ] Essential: **Tests Pass** — All tests pass, including pre-existing failures. A codebase review that accepts "known failures" is normalizing broken smoke detectors. Fix or document why each failure is deferred.
 - [ ] Essential: **Tests Run in CI** — Tests run automatically on commits
 
 ### 7.2 Test Coverage

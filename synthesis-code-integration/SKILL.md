@@ -218,6 +218,18 @@ Attribution is not decoration. Developers use contribution graphs for career adv
 
 Every contribution must pass these gates before integration.
 
+### Meta-Principle: Zero Accepted Failures
+
+Every test must pass. Every lint error must be clean. No exceptions for "pre-existing" or "known" failures.
+
+When you encounter a failing test you didn't cause, fix it — right then, in the same branch. The distinction between "my failure" and "someone else's failure" is irrelevant; the only question is whether the suite is green when you're done.
+
+**Why:** A test suite with accepted failures is a broken smoke detector. It cannot tell you whether your change is safe. Every "known failure" you walk past teaches the next engineer that failing tests are normal. This is how test suites die — not in one catastrophic event, but through gradual normalization of red.
+
+**The cost argument:** Fixing a pre-existing failure while you're already in the code costs minutes. Coming back later after context is lost costs hours. The cheapest time to fix is always now.
+
+**The campsite rule for code:** Leave the test suite greener than you found it. If you touched the codebase, you own its health when you leave.
+
 ### Gate 1: Completeness
 
 - Feature is fully implemented (not half-frontend, half-backend)
