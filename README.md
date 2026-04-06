@@ -4,7 +4,7 @@ Proven AI agent skills for code review, content creation, project management, an
 
 ## Install
 
-**One command — installs all 24 skills to every AI agent on your machine:**
+**One command — installs all 26 skills to every AI agent on your machine:**
 
 ```bash
 npx skills add rajivpant/synthesis-skills --global --all --copy
@@ -62,7 +62,7 @@ All skills are prefixed with `synthesis-` to prevent namespace collisions with s
 ### Content Enhancement
 | Skill | Description |
 |-------|-------------|
-| `synthesis-content-quality` | 27-point quality framework for AI-assisted content |
+| `synthesis-content-quality` | 36-point quality framework for AI-assisted content |
 | `synthesis-fact-checking` | Systematic fact-check process with multi-source confidence framework |
 | `synthesis-blog-refresh` | Refresh old blog posts while maintaining temporal integrity |
 
@@ -86,6 +86,7 @@ All skills are prefixed with `synthesis-` to prevent namespace collisions with s
 | Skill | Description |
 |-------|-------------|
 | `synthesis-thinking-framework` | Four-mode thinking methodology: first principles → systems → complexity → design |
+| `synthesis-voice-profiler` | Generate a structured writing voice profile from samples for your CLAUDE.md |
 | `synthesis-tree-of-thought` | Multi-expert collaborative reasoning technique |
 | `synthesis-llm-setup` | Configure Claude Projects, ChatGPT GPTs, and Gemini Gems |
 | `synthesis-creative-writer` | Creative writer persona template |
