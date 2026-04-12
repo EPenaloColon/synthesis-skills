@@ -5,7 +5,7 @@ license: "CC0-1.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.1.0"
+  version: "1.2.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
   source_type: "public"
 ---
@@ -208,7 +208,7 @@ Scan a configured directory (e.g., `~/workspaces/`) recursively:
 find ~/workspaces -maxdepth 3 -name ".git" -type d 2>/dev/null
 ```
 
-Maintain a **manifest file** (`git-repos.yaml`) that caches discovered repos, their categories, and their remote configurations for quick status checks and cross-machine remote sync. Refresh on each sync — this includes re-capturing all remotes per repo (see **Git Remote Sync Protocol**).
+Maintain a **manifest file** (`git-repos.yaml`) that caches discovered repos, their categories, and their remote configurations for quick status checks and cross-machine remote sync. **Update using the merge protocol** on each sync — never overwrite the yaml from scratch. See **Git Remote Sync Protocol** and **Manifest Merge Protocol**.
 
 ### Per-Repo Sync Procedure
 
@@ -254,7 +254,9 @@ When refreshing `git-repos.yaml`, capture all remotes per repo:
 git -C "$repo_path" remote -v | grep '(fetch)' | awk '{print $1, $2}'
 ```
 
-Write the results into the `remotes:` field of each repo entry in `git-repos.yaml`. This runs as part of the single batched scan script — not as separate tool calls.
+**CRITICAL: Use the Manifest Merge Protocol (below) to update git-repos.yaml. NEVER generate a fresh yaml from scratch and overwrite the existing file.** The existing yaml may contain repos, remotes, categories, notes, and metadata contributed by other machines that this machine doesn't have locally. A destructive overwrite causes data loss.
+
+This runs as part of the single batched scan script — not as separate tool calls.
 
 ### Reconcile (during pull/sync)
 
@@ -284,6 +286,41 @@ Execute this as a SINGLE batched script across all repos — not individual tool
 ### Relationship to setup-git-remotes.sh
 
 If you maintain a `setup-git-remotes.sh` bootstrap script, it serves as a fallback for initial machine setup (before repos are cloned and before the first mac-sync). Once `git-repos.yaml` captures remotes, the yaml is the authoritative source of truth. Keep the bootstrap script consistent with the yaml, or auto-generate it from the yaml during push.
+
+---
+
+## Manifest Merge Protocol
+
+**CRITICAL SAFETY RULE: git-repos.yaml must NEVER be generated from scratch and overwritten.** The yaml is a shared manifest across multiple machines. Each machine may have repos, remotes, or metadata that other machines don't. A destructive overwrite from one machine's scan silently destroys data contributed by other machines.
+
+### The merge procedure
+
+When refreshing git-repos.yaml on any machine:
+
+1. **Read the existing yaml first.** Parse all entries, their paths, categories, notes, remotes, and any other fields.
+
+2. **Scan the local machine** for repos (`find ~/workspaces -maxdepth 3 -name ".git"`). For each discovered repo, capture its remotes.
+
+3. **Merge — additive updates only:**
+   - **Repo exists in yaml AND locally:** Update remotes from local scan (add new remotes, update changed URLs). Preserve all existing fields (category, notes, etc.) unless the local scan has a reason to change them.
+   - **Repo exists locally but NOT in yaml:** Add it as a new entry.
+   - **Repo exists in yaml but NOT locally:** **Keep it.** This machine may not have it cloned. Do NOT remove it.
+   - **Remote exists in yaml but NOT locally:** **Keep it.** Another machine may have added it. Do NOT remove it.
+
+4. **Update metadata:** Refresh the header comment (date, machine name). Recount total_repos as the number of entries in the merged yaml (not the local scan count).
+
+5. **Write the merged result.**
+
+### What this prevents
+
+- Repo discovered on Machine A doesn't disappear when Machine B runs a scan
+- Remotes configured on Machine A survive Machine B's refresh
+- Categories, notes, and other metadata contributed by any machine persist
+- A machine running an older version of the skill that doesn't know about `remotes:` doesn't strip the field
+
+### Never generate yaml from local scan alone
+
+The correct mental model: the yaml is a **multi-machine document** that each machine **contributes to**. It is not a point-in-time capture of any single machine's state.
 
 ---
 
