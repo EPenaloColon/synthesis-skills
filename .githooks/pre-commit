@@ -45,7 +45,7 @@ PRIVATE_SKILL_NAMES=(
     'synthesis-blog-refresh-personal'
     'synthesis-content-series'
     'synthesis-content-strategy'
-    'synthesis-daily-rituals'
+    # 'synthesis-daily-rituals' — moved to public repo in v2.0.0
     'synthesis-ea-collaboration'
     'synthesis-facebook-birthday'
     'synthesis-intellectual-foundation'
