@@ -5,7 +5,7 @@ license: "Apache-2.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
   source_type: "public"
 ---
@@ -28,6 +28,20 @@ A standalone Python script (`repo_sync_check.py`) that scans a workspace for git
 - A CI/CD gate
 
 The script is the single source of truth. Everything else is a trigger.
+
+### Detection vs. Commit — Critical Distinction
+
+**This skill detects. It does not commit.**
+
+`repo_sync_check.py` scans ALL repos in a workspace and reports which are dirty. That is the correct scope for detection — you want to know about every stranded change, not just ones tied to a specific project.
+
+But commits must NEVER be workspace-wide. A commit step should only touch repos where the current invocation created or modified files — not every dirty repo the detector found. Different repos may belong to different projects, different contexts, or work-in-progress the user hasn't finished.
+
+See `synthesis-daily-rituals` "Commit Protocol" section for the per-invocation commit scoping rule. The pattern is:
+
+1. Agent tracks which files it modified in this invocation.
+2. Agent commits only those files, in their containing repos.
+3. `repo_sync_check.py` is the final verification gate — it catches anything the per-invocation commit step missed, but the resolution is still per-repo-scoped, not workspace-wide.
 
 ---
 
@@ -89,7 +103,7 @@ In `~/.claude/settings.json` (or `~/.claude/settings.local.json`):
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /path/to/repo_sync_check.py --alert --speak --quiet",
+            "command": "python3 /path/to/repo_sync_check.py --alert --speak --dirty-only",
             "timeout": 30
           }
         ]
@@ -100,6 +114,21 @@ In `~/.claude/settings.json` (or `~/.claude/settings.local.json`):
 ```
 
 If the installed skill location is `~/.claude/skills/synthesis-repo-guard/`, point to that path.
+
+**Hook flag rationale:**
+- `--alert --speak` — audio notification if any repo is dirty (so you notice even if the terminal is buried).
+- `--dirty-only` — output limited to problematic repos (short, scannable).
+- Do NOT add `--quiet` unless you are intentionally silencing output. Silent hooks teach the agent and user nothing; the point of the end-of-session check is to surface what was missed.
+
+### Defense in Depth: Consider a Stop Hook Too
+
+`SessionEnd` fires when a session truly terminates (user exits, terminal closes). In long-running or resumed conversations, SessionEnd may not fire for days. A `Stop` hook fires after every agent response, which provides continuous feedback but is noisier.
+
+A reasonable pattern:
+- `Stop` hook: runs `repo_sync_check.py --dirty-only --quiet` (silent unless dirty; exit code drives alerting).
+- `SessionEnd` hook: runs `repo_sync_check.py --alert --speak --dirty-only` (loud at true termination).
+
+Pick the combination that matches your workflow. The `Stop` hook is most valuable if your agent is the one that tends to forget to commit; the `SessionEnd` hook is most valuable if you want a final safety net before the machine sleeps or you switch workspaces.
 
 ### OpenAI Codex
 

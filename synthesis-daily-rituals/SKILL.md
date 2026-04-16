@@ -9,7 +9,7 @@ depends_on:
   - synthesis-repo-guard
 metadata:
   author: "Rajiv Pant"
-  version: "2.0.0"
+  version: "2.1.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
   source_type: "public"
 ---
@@ -330,6 +330,52 @@ The day-start checklist does a full sync. The user will ask for syncs repeatedly
 
 The key discipline encoded in that skill: **every sync must re-read ALL threads with replies from today**, not just fetch new channel-level messages. Thread replies don't appear as channel messages — skipping thread re-reads causes stale action plans and duplicate message sends.
 
+**Commit after every sync.** Any sync that creates or updates transcript files, daily plans, or context files must commit and push those changes in the same invocation. See the "Commit Protocol" section below. Do not defer to day-end — the day-end checklist may not run on a given day, and the value of the transcript is lost if it never reaches the remote.
+
+---
+
+## Vacation / Observer Mode Ritual
+
+Use this variant when the user signals they are not actively working ("I'm on vacation", "observer mode", "just keeping up", "don't want to send messages"). Common phrasings: "do the modified ritual", "do what you did the last few days", "stay in observer mode".
+
+Observer mode is NOT a reduced-effort version of the day-start checklist. It is a specific pattern that combines sync + context + commit WITHOUT the active-work steps.
+
+### Steps
+
+1. **Verify the date** — run `date` to confirm today and translate any day-of-week references correctly.
+2. **Check Downloads** for standup transcripts, meeting notes, shared Google Docs, or forwarded emails. Move each to `projects/_transcripts/{workspace}/meetings/` with appropriate naming. Delete originals from Downloads.
+3. **Full Slack sync** — run `/synthesis-slack-sync`. Read every channel, DM, group DM. Follow threads with replies. Save to transcripts.
+4. **Create today's daily plan** in observer mode:
+   - Header says "Mode: VACATION CATCH-UP (awareness only — team is operating independently)" or equivalent
+   - NO draft messages to send
+   - NO "things to do today" for the user
+   - DO include: "Things to Know for Return" section with 5-10 items
+   - DO include: any decisions, incidents, product signals, or concerns that would be hard to catch up on later
+5. **Update CONTEXT.md** and session archive with the day's events. Follow the context lifecycle skill's archival protocol if needed.
+6. **Commit and push** all files touched in this invocation. See Commit Protocol below. Scope strictly to the repos where files were actually modified.
+
+### What Observer Mode Skips (Deliberately)
+
+From the normal Day-Start:
+- Step 6 "Morning Messages" — no messages posted on the user's behalf
+
+From the normal Day-End:
+- Step 3 "Communications" — no replies, no end-of-day status
+- Step 5 "Career Amplification" — no thought leadership capture unless explicitly requested
+
+### What Observer Mode Keeps (Non-Negotiable)
+
+- Date verification
+- Full Slack sync (no channels or DMs skipped, no threads skipped)
+- Transcript capture
+- Daily plan creation (in observer format)
+- CONTEXT.md + session archive updates
+- **Commit and push in the same invocation** — this is the most commonly missed step in modified rituals. Observer mode does not commit less than active mode; it commits exactly the same.
+
+### Why This Is Codified
+
+When observer mode is reinvented per conversation ("do the thing you did yesterday"), the agent makes judgment calls about which steps matter. The commit step is the most often dropped because it feels like a day-end concern. This skill now states explicitly: commit-and-push is part of every observer-mode invocation, not a deferred step.
+
 ---
 
 ## Day-End Checklist
@@ -388,6 +434,40 @@ The key discipline encoded in that skill: **every sync must re-read ALL threads 
 - [ ] Zero untracked files, zero uncommitted changes, zero unpushed commits. No exceptions.
 
 This is not the same as steps 6-8. Those steps commit specific known changes. This step is the **verification gate** that catches anything those steps missed — files from earlier in the session, changes in repos you forgot about, skills edited in `~/.claude/skills/` that weren't synced back. The gate must pass before the session ends.
+
+---
+
+## Commit Protocol — Apply to Every Ritual Invocation
+
+Every ritual invocation — day-start, mid-day sync, day-end, or observer mode — must commit and push any context, transcript, plan, or reference files it modifies. This is not deferred; it happens at the point of modification.
+
+### Scope Rule: Only Commit Repos Touched in This Invocation
+
+This is a hard rule to prevent unintended commits of unrelated work:
+
+1. **Track** which files this invocation created or modified. The agent's own action history is the source of truth — do not infer scope from `git status`, which may include unrelated work in progress.
+2. **Group** those files by their containing repo.
+3. **For each repo touched:** `git add <specific files>` (never `git add -A`, never `git add .`), then commit, then push.
+4. **Never touch** repos where this invocation did not create or modify files, even if they are dirty. That work belongs to another session.
+
+**Example:** A daily ritual for Project A updates `projects/project-a/CONTEXT.md` and creates `projects/_daily-plans/YYYY-MM-DD.md`. If the user also has uncommitted work in `projects/project-b/` from a different session, the ritual does NOT commit that. Only the files this invocation touched.
+
+### Pre-Commit Hook Failures
+
+If a pre-commit hook flags sensitive content:
+- If the destination repo is PRIVATE and the content is intentional (shared reference docs, meeting transcripts, strategic planning copies), use `git commit --no-verify` only after confirming with the user.
+- If the destination repo is PUBLIC, stop. Sanitize the content or exclude the file. Never bypass hooks to push sensitive content to a public repo.
+- If the content is unexpectedly sensitive (credentials, tokens, personal data leaked into a config), investigate before deciding. Do not commit.
+
+### Commit Message Standards
+
+- Reflect the actual changes ("Project week N: context, daily plans, transcripts") not generic filler ("Update files").
+- For private repos, be specific. For public repos, use generic messages that don't reveal restricted names, article titles, or client-specific details.
+- Include `Co-Authored-By` trailer when appropriate.
+
+### Verification Is Separate from Commit
+
+`synthesis-repo-guard` is a **detector** across the workspace — it reports dirty repos. It is NOT a committer. Use it as a final verification gate at session end to catch anything missed, not as the primary commit mechanism.
 
 ---
 

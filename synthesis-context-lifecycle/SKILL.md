@@ -5,7 +5,7 @@ license: "CC0-1.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
   source_type: "public"
 ---
@@ -260,9 +260,11 @@ Archive when ANY of these conditions are true:
    - CONTEXT.md ≤150 lines
    - No information lost (everything archived before removal)
    - Cross-references updated (CONTEXT.md points to REFERENCE.md and sessions/)
-8. **Commit** with message: "Maintain context: archive sessions, extract reference facts"
+8. **Commit AND push** with message: "Maintain context: archive sessions, extract reference facts". Stage only the files this invocation modified — do not `git add -A`. See the Commit Protocol section below for the full rule.
 
 **CRITICAL: Archive FIRST, then delete. NEVER delete content from CONTEXT.md before confirming it exists in sessions/ or REFERENCE.md. Two-phase commit: write to destination, verify, then remove from source.**
+
+**ALSO CRITICAL: Commit-and-push is part of this protocol, not an afterthought.** Every non-trivial context modification (archival or otherwise) must be committed and pushed in the same invocation. See the Commit Protocol section for scoping rules.
 
 ### Decision Tree: Where Does This Content Belong?
 
@@ -386,10 +388,31 @@ Stage 3 is the 80/20 solution that makes long-running AI-assisted projects susta
 
 ---
 
-## Session-End Commit Requirement
+## Commit Protocol — Not Optional
 
-Context files are only useful if they reach the remote repository. Every session that creates or modifies context files (CONTEXT.md, REFERENCE.md, session archives) must commit and push those changes before the session ends.
+Context files are only useful if they reach the remote repository. Every invocation that creates or modifies context files (CONTEXT.md, REFERENCE.md, session archives, daily plans, transcripts) must commit and push those changes before the invocation ends.
 
-This is not optional. Context that exists only on one machine is invisible to the next session on a different machine. The entire point of structured context is cross-session continuity — uncommitted context breaks that guarantee.
+This is not deferred to "end of day" or "end of session." Treat it as part of the same action: if you wrote to a context file, you also commit and push it. Interactive sessions span multiple turns and may not have a clean "end" — so the commit must happen at the point of modification, not at some later checkpoint that may never arrive.
 
-Use `synthesis-repo-guard` to verify all repos are clean before ending a session. See that skill for integration with AI tool session-end hooks.
+### Scope Rule: Only Commit Repos Touched in This Invocation
+
+Never run workspace-wide commit or push operations. Only commit repos where this specific invocation created or modified files. If the user has other uncommitted work in unrelated repos (personal projects, other workspaces, unrelated branches), leave those alone — they belong to other sessions.
+
+The pattern:
+1. Track which files THIS invocation modified (the agent's own action history is the source of truth).
+2. Group those files by containing repo.
+3. For each containing repo: `git add` ONLY those specific files (never `git add -A` or `git add .`), commit, push.
+4. Never touch repos where you did not create or modify files in this invocation.
+
+### Why Point-of-Modification, Not Session-End
+
+Context that exists only on one machine is invisible to the next session on a different machine. The entire point of structured context is cross-session continuity — uncommitted context breaks that guarantee.
+
+Deferring commits to session-end has three failure modes:
+1. **Session never ends cleanly.** Long-running conversations resume across days; a "session-end" hook may never fire.
+2. **Modified ritual modes skip the day-end checklist.** Mid-day syncs, vacation/observer catch-ups, and partial rituals update context without running the full day-end sequence. If commit is only in day-end, these updates never ship.
+3. **Multiple invocations compound uncommitted work.** By the time someone notices, there's a week of context changes stranded on one machine.
+
+### Verification
+
+Use `synthesis-repo-guard` as a detector across the workspace (reports dirty repos) but NEVER as a committer. The commit step must be explicit and per-repo-scoped to this invocation's actual changes. See `synthesis-repo-guard` for session-end hook integration — that hook should alert and surface dirty repos, not blanket-commit them.
