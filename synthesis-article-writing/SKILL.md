@@ -230,6 +230,16 @@ If ANY test fails, the example cannot be used regardless of whether names are re
 5. **Pull Quotes** (3-4 tweetable excerpts)
 6. **Verification Notes** (choices to double-check)
 
+### Author Bios: Rendered by Layout, Not Markdown
+
+On sites that render posts through a component-based layout (such as Astro with an `AuthorBio` component), **do NOT include an inline author bio at the end of the markdown**. The layout adds a visually-separated bio box automatically, pulling from a single source of truth in site config. Writing an inline bio will produce duplicates and defeat the single-source-of-truth design.
+
+For sites without a layout-level bio component — external publications, guest posts, platforms that render raw markdown — include a bio at the end of the draft. If the author maintains a writer-specific bio skill that provides variants for different audiences (Standard, Short, Technical, Executive), pull the appropriate variant from there.
+
+**Co-authored posts with layout-rendered bios** should put co-author bios in front matter (e.g., a `coauthors` array) rather than inline in the body. The layout component renders the primary author's current bio plus each co-author's bio in the same visual treatment. Check the site's front matter schema for supported fields.
+
+**Testimonials and recommendations** (posts written about the site owner by others) should not have the site owner's bio rendered. The layout typically detects these via category (e.g., `Recommendations`) and suppresses the bio component. The testimonial writer's own bio goes at the end of the markdown as usual.
+
 ### Success Criteria
 
 The article succeeds if:
