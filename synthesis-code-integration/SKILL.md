@@ -5,7 +5,7 @@ license: "CC0-1.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.2.0"
+  version: "1.3.0"
   source_repo: "github.com/rajivpant/synthesis-skills"
   source_type: "public"
 ---
@@ -142,6 +142,57 @@ Evaluate against the project's quality gates. Produce written feedback covering:
 - Explain what was changed and why — this is how standards transfer
 - Acknowledge their contribution's value
 - Note lessons that should go into the contributor guide
+
+---
+
+## Branch Hygiene: PR Branches Stay Clean of Staging Content
+
+**When a PR targets `main` and you need to put the same changes on `develop` (or any other staging branch) for QA, push the commit to the staging branch as a separate operation. NEVER merge the staging branch INTO the PR branch.**
+
+Merging staging into a main-targeting PR branch is a shortcut that pollutes the PR diff with all of staging's in-progress work. GitHub shows thousands of changes that aren't actually part of the PR. A reviewer cannot see the actual change. Worse, if the PR is squash-merged, every unreleased commit from staging lands on `main` in one shot — shipping untested and unrelated work to production under the PR's name.
+
+### The correct pattern
+
+You have one commit on a branch based on `main` (call it `branch-X`). You need:
+
+1. PR open against `main` with that commit — reviewers see only the change
+2. The commit on `develop` so staging picks it up for QA
+
+The safe sequence:
+
+```bash
+# 1. Keep branch-X pointing only at your commit (based on main)
+git push origin branch-X
+
+# 2. Open PR against main from branch-X
+
+# 3. Put the commit on develop WITHOUT polluting branch-X:
+git checkout develop
+git pull origin develop
+git merge branch-X          # fast-forward or small merge commit
+git push origin develop
+
+# 4. Return to branch-X for any follow-up work
+git checkout branch-X
+```
+
+Never run `git merge origin/develop` while on `branch-X`. That's the anti-pattern this rule exists to prevent.
+
+### Why this matters
+
+The PR diff is how reviewers form their opinion. A misleading diff:
+
+- Costs the reviewer's time (they have to mentally subtract unrelated changes)
+- Invites "request changes" from reviewers worried about scope
+- Creates real risk: if the PR gets squash-merged (or a reviewer clicks "merge" without checking), all of staging's unreleased work ships to production
+
+### Incident this rule came from
+
+On 2026-04-20, a one-commit Opus model upgrade PR was opened against `main` (23 files, 358/110 lines). To make pushing to `develop` a fast-forward, the agent merged `origin/develop` into the PR branch. The PR diff ballooned to 6,900 changes spanning v0.90.0-rc.7/8/9 work. The team opened "request changes" and flagged the squash-merge risk. Branch was force-pushed back to the single commit within the hour, but reputational damage to the PR author had already occurred. The fix is procedural, not ad-hoc: enforce the pattern above every time.
+
+### When this is safe
+
+Merging staging into a PR branch is safe when the PR explicitly represents the staging-to-main promotion (e.g., a release PR from `develop` → `main`). Those are exceptional — the default for feature or chore PRs is branch hygiene above.
 
 ---
 
