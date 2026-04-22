@@ -59,11 +59,22 @@ def find_config() -> Path:
 def load_config(path: Path) -> dict:
     with path.open() as f:
         cfg = yaml.safe_load(f)
-    required = ["workspace", "google_account", "transcripts_path", "ai_knowledge_repo"]
+    # v0.2.0 schema (2026-04-22): transcripts_repo replaces ai_knowledge_repo
+    # to align with synthesis-slack-sync v2.0.0+ and the workspace-rooted layout.
+    required = ["workspace", "google_account", "transcripts_path", "transcripts_repo"]
     missing = [k for k in required if not cfg.get(k)]
     if missing:
+        # Backward-compat hint: if someone has v1.x schema (ai_knowledge_repo),
+        # tell them what to rename.
+        if cfg.get("ai_knowledge_repo") and "transcripts_repo" in missing:
+            raise ValueError(
+                f"Config {path} uses pre-v0.2.0 schema (ai_knowledge_repo). "
+                "Rename ai_knowledge_repo to transcripts_repo and set it to the "
+                "absolute path of the workspace-private repo. See the SKILL.md "
+                "for the current schema."
+            )
         raise ValueError(f"Config {path} missing required keys: {missing}")
-    cfg["ai_knowledge_repo"] = str(Path(cfg["ai_knowledge_repo"]).expanduser())
+    cfg["transcripts_repo"] = str(Path(cfg["transcripts_repo"]).expanduser())
     return cfg
 
 
@@ -165,8 +176,8 @@ def main() -> int:
         print("       Run ./start.sh or verify server status.", file=sys.stderr)
         return 1
 
-    # Compute out path
-    out_dir = Path(cfg["ai_knowledge_repo"]) / cfg["transcripts_path"] / cfg["workspace"] / "meetings"
+    # Compute out path (v0.2.0 schema — workspace is implicit in transcripts_repo name)
+    out_dir = Path(cfg["transcripts_repo"]) / cfg["transcripts_path"] / "meetings"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"{slugify(args.meeting)}-{target_date}.md"
 
