@@ -40,21 +40,26 @@ CONFIDENTIAL_NAMES=(
 PRIVATE_SKILL_NAMES=(
     'synthesis-skills-rajiv'
     'synthesis-skills-mcclatchy'
-    'synthesis-article-publishing'
-    'synthesis-author-bios'
-    'synthesis-blog-refresh-personal'
-    'synthesis-content-series'
-    'synthesis-content-strategy'
-    # 'synthesis-daily-rituals' — moved to public repo in v2.0.0
-    'synthesis-ea-collaboration'
-    'synthesis-facebook-birthday'
-    'synthesis-intellectual-foundation'
-    'synthesis-linkedin-engagement'
-    'synthesis-personalized-demo'
-    'synthesis-reddit-engagement'
-    'synthesis-social-media-strategy'
-    'release-process'
-    'synthesis-merge-verification'
+    # All Rajiv personal skills — renamed from synthesis- to rajiv-private- prefix
+    'rajiv-private-article-publishing'
+    'rajiv-private-article-refresh-personal'
+    'rajiv-private-author-bios'
+    'rajiv-private-backdated-article-writing'
+    'rajiv-private-content-series'
+    'rajiv-private-content-strategy'
+    'rajiv-private-ea-collaboration'
+    'rajiv-private-facebook-birthday'
+    'rajiv-private-featured-article-selection'
+    'rajiv-private-intellectual-foundation'
+    'rajiv-private-linkedin-engagement'
+    'rajiv-private-mac-cleanup'
+    'rajiv-private-personalized-demo'
+    'rajiv-private-publication-dating'
+    'rajiv-private-reddit-engagement'
+    'rajiv-private-social-media-strategy'
+    # McClatchy team-shared skills — renamed to mcclatchy- prefix
+    'mcclatchy-merge-verification'
+    'mcclatchy-release-process'
 )
 
 # ── Internal URLs ────────────────────────────────────────────────────
@@ -83,8 +88,15 @@ for p in "${CONFIDENTIAL_NAMES[@]}" "${PRIVATE_SKILL_NAMES[@]}" "${INTERNAL_URLS
     fi
 done
 
-# Check staged changes (added/modified content only)
-MATCHES=$(git diff --cached --diff-filter=AM -U0 | grep '^+' | grep -v '^+++' | grep -i -E "$PATTERN" | head -20) || true
+# Check staged changes (added/modified content only).
+# Excludes the hook file itself: adding a name to this allowlist is the opposite
+# of leaking it, but the diff would still match the pattern. Skip self.
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=AM | grep -v '^\.githooks/pre-commit$' || true)
+if [ -n "$CHANGED_FILES" ]; then
+    MATCHES=$(echo "$CHANGED_FILES" | xargs git diff --cached --diff-filter=AM -U0 -- | grep '^+' | grep -v '^+++' | grep -i -E "$PATTERN" | head -20) || true
+else
+    MATCHES=""
+fi
 
 if [ -n "$MATCHES" ]; then
     echo ""
