@@ -165,7 +165,7 @@ parse_depends_on() {
         return
     fi
     # Remove 'depends_on:', brackets, quotes, spaces — split on commas
-    echo "$dep_line" | sed 's/^depends_on: *//; s/\[//; s/\]//; s/"//g; s/ //g' | tr ',' '\n' | grep -v '^$'
+    echo "$dep_line" | sed 's/^depends_on: *//; s/\[//; s/\]//; s/"//g; s/ //g' | tr ',' '\n' | grep -v '^$' || true
 }
 
 # Read source_type from an installed skill's .source.json
