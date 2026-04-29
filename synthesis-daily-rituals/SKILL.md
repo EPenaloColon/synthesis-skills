@@ -9,7 +9,7 @@ depends_on:
   - synthesis-repo-guard
 metadata:
   author: "Rajiv Pant"
-  version: "2.4.0"
+  version: "2.5.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -17,6 +17,24 @@ metadata:
 # Daily Rituals — Global Checklists
 
 Standard day-start and day-end rituals for synthesis engineering projects. These are the global (per-person) checklists. Each project may have a project-specific supplement that extends these with channel-specific sync, repo-specific checks, and stakeholder-specific communications.
+
+## v2.5.0 — Draft Fence Convention (nested code blocks)
+
+In v2.5.0 (2026-04-29), the canonical fence convention for draft message bodies is documented to handle the case where a draft contains its own triple-backtick code blocks (install commands, code samples, log excerpts).
+
+**Rule:**
+
+- **Default fence for a draft body is 3 backticks** (` ``` `). Use this when the message body contains no triple-backtick code blocks.
+- **If the draft body contains ANY internal triple-backtick blocks**, the outer fence must be at least one backtick longer than the longest internal fence. In practice this means **4-backtick outer fence** (` ```` `) when the message contains 3-backtick blocks.
+
+**Why:** CommonMark closes a fenced code block at the first fence of equal-or-greater length. A 3-backtick outer wrapper is closed by the first 3-backtick inner fence — splitting the draft into multiple disjoint blocks and breaking the synthesis-console renderer (which attaches its action bar to the first fenced block after `**Send to:**`). A 4-backtick outer wrapper survives 3-backtick inner blocks unchanged; the inner fences become literal content of the outer fence, which is exactly what we want for a draft body containing install snippets or code samples.
+
+**Pasting into Slack:** when the user clicks Copy in synthesis-console, the action reads `.innerText` from the rendered `<pre>` block — outer fence delimiters are stripped, inner ` ``` ` markers are preserved as literal text. Slack then re-interprets the inner ` ``` ` as Slack code blocks. End-to-end behavior is correct.
+
+**Cross-reference:**
+
+- Consumer-side handling lives in synthesis-console `docs/cockpit-design.md` "Drafts" section (the consumer is being updated to handle multi-segment drafts robustly via `augmentDraftBlocks`, but the producer-side convention here is independently correct and should be applied regardless).
+- Lesson backing this rule: `lessons/2026-04-29-document-as-contract-with-llm-producers.md`.
 
 ## v2.4.0 — Canonical Plan Format Contract
 
@@ -317,7 +335,7 @@ The daily plan follows this canonical structure. On each update, consolidate int
 ### Draft A — [Description]
 **Send to:** `#channel-name` — [thread locator]
 ```
-[message body in fenced code block]
+[message body in fenced code block — use 3 backticks if the body has no internal code blocks; use 4 backticks (````) if the body contains any internal ``` blocks. See v2.5.0 — Draft Fence Convention.]
 ```
 **Grounding:**
 - [bullet]
@@ -374,7 +392,7 @@ Within each section, the parser also recognizes structural patterns. Adhering to
 **Drafts section** (`## Drafts — Ready to Send`):
 - One H3 per draft (`### Draft A — Description`)
 - A `**Send to:** target — locator` paragraph identifying the recipient. `**Channel:**` is also accepted.
-- A fenced code block OR blockquote with the message body.
+- A fenced code block OR blockquote with the message body. **Fence convention (v2.5.0+):** default is 3 backticks; if the body contains any internal triple-backtick code blocks (install commands, log excerpts), use a 4-backtick outer fence (or any length strictly greater than the longest internal fence). The 4-backtick outer fence renders correctly in synthesis-console AND survives the Copy button intact (outer fence stripped, inner ` ``` ` preserved for Slack to re-interpret).
 - Optional: a `**Grounding:**` paragraph or bullet list with research backing.
 - After send: skill / cockpit appends `**Sent:** <ISO> (TS=...) <permalink>` directly under the body.
 - **Drafts may also appear under non-drafts H2s.** When a draft is added to a topical context (e.g., a draft DM written into "Things to Know" alongside the situation that prompted it), the cockpit's DRAFTS region aggregates it from wherever it lives in the document. The canonical placement is still under `## Drafts`, but topical inline drafts work too.
