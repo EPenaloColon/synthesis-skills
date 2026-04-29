@@ -5,7 +5,7 @@ license: "CC0-1.0"
 metadata:
   depends_on: "synthesis-daily-rituals, synthesis-project-management"
   author: "Rajiv Pant"
-  version: "3.1.0"
+  version: "3.2.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -15,6 +15,39 @@ metadata:
 A protocol for syncing Slack channels and threads to local transcript files using Slack MCP. Designed for AI-assisted workflows where an agent reads Slack on behalf of a user, saves transcripts locally, and updates a daily action plan.
 
 This skill provides the **protocol** — the sync methodology, thread re-reading discipline, transcript format, and action plan update rules. A per-project **config file** provides the specifics: which channels, which paths, which DMs. Prefer `.agents/slack-sync.yaml`; existing `.claude/slack-sync.yaml` configs remain supported.
+
+## v3.2.0 — Canonical Sent-State Marker Location
+
+In v3.2.0 (2026-04-29), the prescribed format for marking a draft as SENT changes from H3-jammed metadata to a separate `**Sent:**` paragraph below the draft body.
+
+The pre-v3.2.0 form jammed the entire SENT metadata into the H3 heading text:
+
+```markdown
+### ~~Draft N: title~~ ✅ SENT by Rajiv at Thu Apr 2 6:16 PM EDT in #channel-name
+```
+
+That format renders as four lines of giant strikethrough in synthesis-console (H3 typography is ~1.75rem; long heading text wraps painfully). It also breaks the cockpit's sent-state detection — synthesis-console's parser looks for `**Sent:**` paragraphs to recognize sent drafts and replace the action bar with a "Sent" badge + "Open in Slack" link. With SENT in the H3, the parser doesn't notice, and the user sees Copy/Edit/Send buttons on a draft that already shipped.
+
+The v3.2.0 canonical form keeps the H3 short and puts the metadata in its own paragraph:
+
+```markdown
+### ~~Draft N: title~~
+
+**Send to:** ...
+
+` ` `
+[Message text]
+` ` `
+
+**Sent:** Thu Apr 2 6:16 PM EDT — by Rajiv in #channel-name (TS=1775141956.643419) https://acme.slack.com/archives/C0XXXXXX/p1775141956643419
+
+**Grounding:**
+- ...
+```
+
+**Backward compatibility.** The skill's `thread_checker.py` and synthesis-console v0.8.6+'s parser both accept the legacy H3-jammed form as well as the new canonical form. Existing daily-plan files don't need to be rewritten retroactively — but new SENT markers should use the canonical form, and any time the agent rewrites a sent draft for any reason, it should bring it to the canonical form.
+
+This release follows the same producer-consumer-contract pattern as recent updates to other skills: when the consumer is the synthesis-console cockpit and the producer is a generative agent, the format and the parser must change together. Cross-reference: synthesis-console's `docs/cockpit-design.md` "Drafts" section.
 
 ## v3.1.0 — Workspace Domain, Permalinks, and Provenance Discipline
 
@@ -291,11 +324,38 @@ Every draft must use this exact structure. The user's workflow is: glance at whe
    - Staleness check — whether anything has happened since the draft was written that could make it wrong
    - Any facts the agent could NOT verify (flag explicitly so the user knows)
 
-**When marking drafts as SENT:**
+**When marking drafts as SENT (canonical, v3.2.0+):**
+
+Two changes to the draft section:
+
+1. **Wrap the H3 title in `~~...~~`** so the title shows struck through. Keep the H3 short — title only. NEVER pack SENT metadata into the heading text.
+2. **Append a `**Sent:**` paragraph** immediately after the draft body, BEFORE the `**Grounding:**` paragraph if present.
+
 ```markdown
-### ~~Draft N: [description]~~ ✅ SENT by Rajiv at Thu Apr 2, 6:16 PM EDT in #channel-name
+### ~~Draft N: [description]~~
+
+**Send to:** #channel-name — reply to @Author Name's message at Wed Apr 2, 10:59 AM EDT (TS: 1775141956.643419)
+
+` ` `
+[Message text]
+` ` `
+
+**Sent:** Thu Apr 2 6:16 PM EDT — by Rajiv in #channel-name (TS=1775141956.643419) https://acme.slack.com/archives/C0XXXXXX/p1775141956643419
+
+**Grounding:**
+- ...
 ```
-Include the human-readable time the message was found in Slack.
+
+**Sent paragraph fields:**
+- Human-readable date+time first (the user reads this).
+- "by [Name]" identifies who sent the message (useful in shared workspaces or when the sender is not the daily-plan owner).
+- Channel or DM target.
+- `TS=<unix-ts>` — agent uses this to re-read the message and any thread replies.
+- Permalink (when `slack_workspace_domain` is configured) — synthesis-console renders this as the "Open in Slack" / "View in Slack" link in the sent badge.
+
+**Backward compat:** the legacy H3-jammed form is still recognized by `thread_checker.py` and by synthesis-console v0.8.6+, so existing files continue to work. New SENT markers should use the canonical form above.
+
+Cross-reference: synthesis-console's [docs/cockpit-design.md](https://github.com/synthesisengineering/synthesis-console/blob/main/docs/cockpit-design.md) "Drafts" section. The format and the cockpit's parser are the producer-consumer contract — they must change together.
 
 ---
 

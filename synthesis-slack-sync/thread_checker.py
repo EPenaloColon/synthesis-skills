@@ -116,54 +116,86 @@ def extract_threads(transcript_path: str) -> list[dict]:
 
 
 def extract_unsent_drafts(action_plan_path: str) -> list[dict]:
-    """Extract unsent draft thread TSes from the action plan."""
+    """Extract unsent draft thread TSes from the action plan.
+
+    A draft is considered SENT (and is skipped) when ANY of these signals are
+    present:
+      - The H3 line itself contains `SENT` or `~~` markers (legacy pre-v3.2.0
+        form: ``### ~~Draft N: title~~ ✅ SENT by Rajiv at ... in #channel``).
+      - A `**Sent:**` paragraph appears within the draft's section (the v3.2.0+
+        canonical form, also written by synthesis-console's mark-as-sent
+        endpoint).
+
+    Either signal alone is sufficient. The parser is intentionally tolerant —
+    files on disk may contain either form during the transition.
+    """
     content = Path(action_plan_path).read_text()
     drafts = []
     seen_drafts = set()
 
-    # Find draft sections that are NOT struck through
+    # Find draft sections that are NOT yet sent.
     lines = content.split('\n')
     i = 0
     while i < len(lines):
         line = lines[i]
 
         # Match draft headers: ### Draft N: ...
-        # Skip struck-through: ### ~~Draft N...~~ SENT
         draft_match = re.match(r'^###\s+Draft\s+(\d+):\s*(.*)', line.strip())
-        if draft_match and '~~' not in line and 'SENT' not in line:
-            draft_num = int(draft_match.group(1))
-            draft_title = draft_match.group(2)
+        if not draft_match:
+            i += 1
+            continue
 
-            if draft_num in seen_drafts:
-                i += 1
-                continue
-            seen_drafts.add(draft_num)
+        # Legacy sent-state signals in the heading line itself.
+        if '~~' in line or 'SENT' in line:
+            i += 1
+            continue
 
-            # Scan the next ~20 lines for a TS — accept legacy `TS: ...` text or
-            # v3.1.0+ Slack permalink path `/pNNNNNNNNNNNNNNNN`.
-            block = '\n'.join(lines[i:i + 20])
-            ts_match = re.search(r'TS:\s*([\d.]+)', block)
-            permalink_match = re.search(r'/p(\d{10})(\d{6})\b', block)
-            channel_match = re.search(r'Channel.*?([A-Z][A-Z0-9]{8,})', block)
-            if not ts_match and permalink_match:
-                # Synthesize a match-like wrapper exposing group(1) for the
-                # downstream code below.
-                class _M:
-                    def __init__(self, ts):
-                        self._ts = ts
-                    def group(self, _n):
-                        return self._ts
-                ts_match = _M(f"{permalink_match.group(1)}.{permalink_match.group(2)}")
-            # Permalink also carries the channel id under /archives/ — pull it.
-            if not channel_match:
-                channel_match = re.search(r'/archives/([A-Z][A-Z0-9]{8,})/', block)
+        # New (v3.2.0+) sent-state signal: a `**Sent:**` paragraph within the
+        # draft's body region (before the next H3/H2 or end of section).
+        section_end = i + 1
+        while section_end < len(lines):
+            nxt = lines[section_end]
+            if re.match(r'^#{1,3}\s', nxt):
+                break
+            section_end += 1
+        section_block = '\n'.join(lines[i:section_end])
+        if re.search(r'^\s*\*\*\s*Sent(?:\s*at)?\s*:?\s*\*\*', section_block, re.MULTILINE):
+            i += 1
+            continue
 
-            drafts.append({
-                'number': draft_num,
-                'title': draft_title,
-                'ts': ts_match.group(1) if ts_match else None,
-                'channel_id': channel_match.group(1) if channel_match else None,
-            })
+        draft_num = int(draft_match.group(1))
+        draft_title = draft_match.group(2)
+
+        if draft_num in seen_drafts:
+            i += 1
+            continue
+        seen_drafts.add(draft_num)
+
+        # Scan the next ~20 lines for a TS — accept legacy `TS: ...` text or
+        # v3.1.0+ Slack permalink path `/pNNNNNNNNNNNNNNNN`.
+        block = '\n'.join(lines[i:i + 20])
+        ts_match = re.search(r'TS:\s*([\d.]+)', block)
+        permalink_match = re.search(r'/p(\d{10})(\d{6})\b', block)
+        channel_match = re.search(r'Channel.*?([A-Z][A-Z0-9]{8,})', block)
+        if not ts_match and permalink_match:
+            # Synthesize a match-like wrapper exposing group(1) for the
+            # downstream code below.
+            class _M:
+                def __init__(self, ts):
+                    self._ts = ts
+                def group(self, _n):
+                    return self._ts
+            ts_match = _M(f"{permalink_match.group(1)}.{permalink_match.group(2)}")
+        # Permalink also carries the channel id under /archives/ — pull it.
+        if not channel_match:
+            channel_match = re.search(r'/archives/([A-Z][A-Z0-9]{8,})/', block)
+
+        drafts.append({
+            'number': draft_num,
+            'title': draft_title,
+            'ts': ts_match.group(1) if ts_match else None,
+            'channel_id': channel_match.group(1) if channel_match else None,
+        })
 
         i += 1
 
