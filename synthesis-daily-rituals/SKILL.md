@@ -9,7 +9,7 @@ depends_on:
   - synthesis-repo-guard
 metadata:
   author: "Rajiv Pant"
-  version: "2.5.0"
+  version: "2.6.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -17,6 +17,20 @@ metadata:
 # Daily Rituals — Global Checklists
 
 Standard day-start and day-end rituals for synthesis engineering projects. These are the global (per-person) checklists. Each project may have a project-specific supplement that extends these with channel-specific sync, repo-specific checks, and stakeholder-specific communications.
+
+## v2.6.0 — Draft Numbering Convention (numbers, not letters)
+
+In v2.6.0 (2026-04-29 very late evening), the convention for labeling drafts in a daily plan is fixed to **sequential integers** (Draft 1, Draft 2, Draft 3, …) rather than alphabet letters (Draft A, Draft B, …).
+
+**Rule:** the first draft of the day is Draft 1. Each subsequent draft increments by 1. No letter labels. No K-2 / K-3 sub-versioning — if a single piece of work produces multiple draft messages (e.g., the same praise routed to two audience-specific channels), each one gets its own integer (Draft 11, Draft 12, Draft 13). The chronological count of drafts in the plan equals the highest integer in use, which makes it easy to answer "how many drafts today?" by reading a single label.
+
+**Why:** numbers are easier to count at a glance, have no 26-item ceiling, and don't impose a mental "is K the 11th letter?" tax. The K-2 / K-3 sub-versioning that letter-labels invite is uglier than 11 / 12 / 13 and creates label-shape inconsistency in the file. Letter labels also make it harder to grep for "all drafts from #N onward" because alphabet ordering is lexicographic, not arithmetic.
+
+**Retraction handling:** if a draft is retracted (caught fabrication, sent-then-deleted, etc.), reserve the number with a brief marker — e.g., `### Draft 8 — retracted` plus a one-line note pointing to the session log — rather than renumbering subsequent drafts. Renumbering after a retraction creates label-drift across the file and any cross-references in chat. The reserved number is the durable record that the slot existed.
+
+**Cross-file consistency:** when renumbering a daily plan that's already been referenced from CONTEXT.md or session logs (those use the labels in effect at the time), update only the daily plan and add a brief note acknowledging the cross-reference gap. Historical narrative in session logs preserves the labels in use at the time — that's the right behavior, not a bug.
+
+**Pre-draft check:** when adding a new draft to a daily plan, the first thing the agent does is scan the file for the highest existing `Draft N` integer and use N+1. No alphabet thinking.
 
 ## v2.5.0 — Draft Fence Convention (nested code blocks)
 
@@ -235,6 +249,28 @@ All draft messages in the daily action plan must follow these formatting and qua
 3. **Thread locators for every reply draft.** Include: channel name, human-readable date/time of parent message, author name, and first ~10 words of the message being replied to. Use the format: `**Channel:** #channel-name — Author Name, Mon Mar 30 at 11:31 AM EDT — "First ten words of the message..."`. The Slack thread TS (Unix timestamp) should be included for technical reference but is NOT the primary locator — the human-readable context is what the user needs to find the thread.
 
 4. **Keep messages concise.** Slack messages over ~15 lines get collapsed behind a "Show more" fold. Front-load the most important information.
+
+### Draft Numbering Convention
+
+Drafts in a daily plan are labeled with sequential integers, not alphabet letters. The first draft of the day is **Draft 1**; each subsequent draft increments by 1.
+
+**Do:**
+
+- `### Draft 1: Multi-provider routing announcement`
+- `### Draft 2: Reply to Oliver — Terraform readiness`
+- `### Draft 11: Patrick public praise — release window`
+- `### Draft 12: User-channel supplement (L&E)` (when same theme is routed to multiple audiences, each variant still gets its own integer)
+
+**Do NOT:**
+
+- `### Draft A: ...`, `### Draft B: ...` (alphabet labels — replaced by integers in v2.6.0)
+- `### Draft K-2: ...`, `### Draft K-3: ...` (letter-with-suffix sub-versioning — replaced by sequential integers)
+
+**Pre-draft step:** before adding a new draft, grep or scan the file for the highest existing `Draft N` integer and use N+1.
+
+**Retraction:** if a draft is retracted (e.g., a fabricated message caught and removed), keep the number reserved in the file (`### Draft N — retracted` with a one-line pointer to the session log) rather than renumbering subsequent drafts. The reserved slot is the durable historical record.
+
+See the v2.6.0 section at the top of this skill for the full rationale (counting tax, lexicographic ordering, sub-version ugliness, cross-file consistency).
 
 ### Temporal Integrity
 
