@@ -56,6 +56,7 @@ PRIVATE_SKILL_NAMES=(
     'rajiv-private-personalized-demo'
     'rajiv-private-publication-dating'
     'rajiv-private-reddit-engagement'
+    'rajiv-private-content-distribution'
     'rajiv-private-social-media-strategy'
     # McClatchy team-shared skills — renamed to mcclatchy- prefix
     'mcclatchy-merge-verification'

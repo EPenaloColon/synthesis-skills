@@ -12,7 +12,7 @@ license: "CC0-1.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -65,35 +65,80 @@ Gather this information:
 
 ## Strategic Context and Voice
 
-Apply voice and style preferences from agent instruction files such as `CLAUDE.md` or `AGENTS.md` if present. Otherwise, customize the section below.
+Voice and tone for posts come from the user's active voice profile, not from this skill. Apply whatever voice profile is loaded in the current environment — typically a private skill (e.g., `<workspace>-private-writing-voice`), a `CLAUDE.md` / `AGENTS.md` instruction block, or both. This skill is methodology-agnostic about voice; it does not embed sample voice traits, sample forbidden language, or persona text.
 
-**Professional Positioning**
-Describe your professional background, areas of expertise, and how you want to be perceived. This helps produce posts that carry the right authority.
+Areas the active voice profile should cover for content distribution to work well:
 
-Areas to cover:
-- Domain expertise and experience level
-- Current focus or role
-- How you are known professionally
-- What distinguishes your perspective
+- **Professional positioning** — domain expertise, current role, what distinguishes the writer's perspective.
+- **Authentic voice characteristics** — direct vs academic, formal vs conversational, contrarian vs consensus-leaning, etc.
+- **Forbidden language** — words and patterns the writer never uses.
+- **Strategic subtlety** — how expertise should surface (through analysis quality, storytelling, evidence) rather than be claimed directly.
 
-**Authentic Voice Characteristics**
-Define communication style. Examples:
-- Direct and substantive without being academic
-- Confident from experience, not self-promotion
-- Intellectually curious and willing to challenge conventional wisdom
-- Values precision in language and thought
-- Demonstrates expertise through insight, not credentials
+If no voice profile is active, ask the user to load one (or to describe their voice in conversation) before generating posts. Defaults applied without user input produce generic posts that read as machine-generated.
 
-**What Feels Inauthentic**
-Words and patterns to avoid. Common examples:
-- "honored," "humbled," "excited," "thrilled," "privileged"
-- Obvious statements or business platitudes
-- Marketing copy or promotional language
-- Excessive adjectives or superlatives
-- Humble bragging or credential listing
+## Sidecar File Convention
 
-**Strategic Subtlety**
-Define how expertise should be demonstrated: through credentials, analysis quality, storytelling, or other means.
+Promotion content for a published article should live as a **sidecar markdown file alongside the article itself**, not in a separate project folder.
+
+**Convention:** the sidecar is named `social.md` and lives in the same directory as the article's main markdown file.
+
+For static-site generators that store articles in slug-named folders (e.g., Astro, Hugo, Eleventy):
+```
+content/posts/YYYY/MM/DD-slug/
+├── index.md          ← the article (or post.md, depending on your SSG)
+├── social.md         ← the sidecar
+└── [images]
+```
+
+For flat-layout blogs (one .md per post):
+```
+content/posts/
+├── post-slug.md
+├── post-slug.social.md
+└── ...
+```
+
+**Why sidecar:** the promotion content travels with the article. When the article moves between repos (drafts → destination), promotion content moves with it. Co-location reduces drift, makes the file findable when working on the post, and survives directory moves intact.
+
+**Safety:** standard SSG content collection globs (`**/index.md`, `**/post.md`, etc.) won't match `social.md`, so the sidecar is safe from accidental publishing. Verify against your specific glob if uncertain.
+
+**Sidecar file structure:** one `## Platform Name` section per platform, each containing the post text ready to copy-paste, plus optional notes (timing, tagging, alt-text). Top of file: the article URL used in posts, the canonical URL (if different), and the generation date.
+
+**Skeleton:**
+
+```markdown
+# Social posts: <article title>
+
+**Article URL (for posts):** <URL>
+**Canonical URL (for SEO reference):** <URL, often same>
+**Generated:** YYYY-MM-DD
+
+---
+
+## Platform selection
+
+[One-line rationale per platform — why include or skip]
+
+---
+
+## LinkedIn
+
+[Post text, ready to copy-paste]
+
+**Notes:** [...]
+
+---
+
+## Twitter/X
+
+[Tweets, one per paragraph]
+
+---
+
+## [Other platforms]
+```
+
+Configuration of which platforms to include, which URL to use (some sites maintain a separate display URL distinct from the SEO canonical), and platform-specific engagement patterns are user-specific. A private/personal skill layer should encode those choices.
 
 ## Platform-Specific Guidelines
 
