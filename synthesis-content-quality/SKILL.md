@@ -7,17 +7,17 @@ description: >
   exposure. Use for content quality, AI content, quality check, writing quality,
   editorial review, content review, content improvement, and publishing standards.
 license: CC0-1.0
-depends_on: ["synthesis-fact-checking"]
+depends_on: []
 metadata:
   author: Rajiv Pant
-  version: 3.0.0
+  version: 3.1.0
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
 
 # Content Quality
 
-A systematic methodology for developing high-quality AI-assisted content and identifying content that falls short. This framework defines 36 criteria organized into confidence tiers for evaluating whether AI-assisted content meets professional publishing standards.
+A systematic methodology for developing high-quality AI-assisted content and identifying content that falls short. This framework defines 37 criteria organized into confidence tiers for evaluating whether AI-assisted content meets professional publishing standards.
 
 ## When to Use This Skill
 
@@ -129,6 +129,10 @@ Each criterion is tagged with its confidence tier: **[HIGH]**, **[MED]**, or **[
 
 36. **The Concierge Tone** [HIGH] -- Sycophantic agreement, sterile professional empathy, and service-register language appearing in content that is not customer service. Manifestations include: excessive validation ("That's a great question!"), hedged positivity that avoids any negative assessment, formulaic empathy ("I understand your concern"), and a pervasive agreeableness that treats every statement as a customer interaction. Distinct from chatbot artifacts (criterion 19), which are structural tells like valedictions and help offers. The concierge tone is a tonal quality that pervades the entire piece — the writer never disagrees, never says something is wrong, never takes a position that might displease. Fix: take positions. Disagree where warranted. State limitations directly. Professional writing has a perspective; service writing has a customer.
 
+### Frame and Audience Patterns
+
+37. **Insider Context Collapse** [HIGH] -- Right vocabulary deployed in a frame the reader does not share. The article references tools, abstractions, version numbers, code identifiers, internal events, or internal directories as if the reader has the writer's project context. Distinct from criterion 26 (lack of personal detail), which catches the OPPOSITE direction (writing too generic to convey expertise). Insider context collapse is writing too specific to the writer's frame for the reader to land on. The grammar is clean; the saturated AI vocabulary is absent; the meaning is private. Manifestations: tool or project names introduced without inline definition ("synthesis-console v0.8.0"); internal abstractions used as if known ("the cockpit's NEEDS YOU region," "the parser"); version numbers in prose ("v0.8.3 → v0.8.5"); code identifiers in prose without descriptive context (function names, class names, file paths); references to internal events ("another session reviewing the code," "the X arc"); internal directories or paths used as if the reader knows the project layout. The writer cannot detect this by re-reading — the writer is the insider. The check has to be procedural: every paragraph compared against an explicit reader briefing (see [`synthesis-reader-briefing`](../synthesis-reader-briefing/SKILL.md)). Fix: every internal term gets either an inline introduction on first use or a replacement with descriptive language. Threshold calibrates by genre: strict for technical/teaching, looser for personal-narrative where unexplained texture is part of the form.
+
 For detailed explanations, examples, and fix guidance for each criterion, see [references/detailed-criteria.md](references/detailed-criteria.md).
 
 ## Confidence-Based Evaluation Process
@@ -154,6 +158,18 @@ If any are present: very likely unedited AI output.
 - Is this from an established author with a portfolio?
 - Does other work by this author show similar patterns?
 - Is the publication known for quality control?
+
+## What This Framework Does NOT Catch On Its Own
+
+The 37 criteria detect AI-shaped writing (saturated vocabulary, hyperbolic patterns, mechanical transitions), human-shaped writing that is too generic (criterion 26), and frame-level insider collapse (criterion 37). They do not, on their own, catch upstream framing failures — articles where the writer never asked the audience question and the draft inherits the source material's frame.
+
+For that, the prevention is upstream: a reader briefing before drafting (see [`synthesis-reader-briefing`](../synthesis-reader-briefing/SKILL.md)). Criterion 37 detects the failure in finished drafts; the briefing prevents it before drafting begins. Defense in depth: do both.
+
+The framework also does not catch:
+
+- **Errors of omission relative to the briefing.** The article passes every quality check and still does not deliver what the briefing promised the reader would leave with. The Insight Quality lens in `synthesis-article-writing` Phase 3 is the closer fit.
+- **Voice mismatch.** The article is technically correct but does not sound like the author. The Human Touch test below catches some of this; the [`synthesis-voice-profiler`](../synthesis-voice-profiler/SKILL.md) skill catches more.
+- **Strategic positioning errors.** A correct article in the wrong publication, on the wrong topic, at the wrong moment. The [`synthesis-content-framing`](../synthesis-content-framing/SKILL.md) skill is the right tool for those decisions.
 
 ## Ineffective Detection Methods
 
@@ -214,6 +230,19 @@ When using AI to assist content creation, revise through these five passes:
 - "Why X will never be the same"
 - "The surprising truth about..."
 - "What nobody tells you about..."
+
+### Stranger-Read Patterns (Before Publishing)
+
+Threshold calibrates by genre per the reader briefing — strict for technical/teaching articles, looser for personal-narrative where unexplained texture is part of the form.
+
+- [ ] Tool or project name appears without inline definition on first use
+- [ ] Internal abstraction ("the cockpit," "the dashboard's X") used without prior introduction
+- [ ] Version number appears in prose (v0.8.3, v2.4.0)
+- [ ] Code identifier in prose without descriptive context (function name, class name, file path)
+- [ ] Reference to internal events ("another session," "the X arc," "my fix arc")
+- [ ] Internal directory or path used as if reader knows the project layout
+
+If any item is checked and the briefing's "what they bring" answer does not include that knowledge, translate or remove. See criterion 37 (Insider Context Collapse) and [`synthesis-reader-briefing`](../synthesis-reader-briefing/SKILL.md).
 
 ### Anonymization Checks (Before Publishing)
 

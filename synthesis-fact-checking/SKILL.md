@@ -5,7 +5,7 @@ license: "CC0-1.0"
 depends_on: ["synthesis-content-quality"]
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -29,8 +29,9 @@ The companion skill, the synthesis-content-quality skill, addresses stylistic an
 5. Quote Verification
 6. Study Verification
 7. Temporal Verification (if backdated)
-8. Documentation
-9. Pre-Publish Checklist
+8. Translation-Pass Re-Verification (if a de-jargoning, anonymization, or accessibility pass was applied)
+9. Documentation
+10. Pre-Publish Checklist
 
 ---
 
@@ -252,7 +253,49 @@ When writing or revising an article with a publication date in the past, tempora
 
 ---
 
-## 8. Documentation Template
+## 8. Translation-Pass Re-Verification
+
+Apply this protocol when an article has been through a de-jargoning, anonymization, or accessibility pass — any pass that replaces precision-bearing terms with vaguer prose for the benefit of a wider audience. This includes:
+
+- Removing or replacing tool/project names with generic descriptions ("synthesis-console" → "a personal dashboard").
+- Removing version numbers from prose ("v0.8.0" → "the first version" or "a recent version").
+- Replacing code identifiers with descriptive language (`augmentDraftBlocks` → "the draft-decoration logic").
+- Replacing project-specific dates with vaguer references ("April 29, 2026" → "earlier this month").
+- Replacing internal directory names with generic terms (`daily-plans/` → "the historical archive").
+
+The translation pass introduces its own accuracy hazard. The pre-translation prose was precise and verifiable. The post-translation prose is accessible — and may no longer be true.
+
+### Why this is a distinct fact-check step
+
+The standard fact-check (sections 1-6) verifies that claims match source material. The translation pass happens AFTER that verification, when accessibility editing rephrases verified claims. The rephrasing can:
+
+1. **Generalize what was specific.** "v0.8.0" replaced by "the first version" is wrong if the tool had earlier versions and v0.8.0 only added a feature. The original was verified; the replacement is a new claim that has not been verified.
+2. **Soften what was definite.** "The function walks the rendered HTML" replaced by "an application-level layer above the parser" loses specificity that may not be true at the new level. The function might not be at that layer at all.
+3. **Lose load-bearing precision.** A specific metric ("94.4% classified correctly") rephrased generally ("most classified correctly") may obscure a result that the argument depended on. "Most" can mean anything from 51% to 99%.
+4. **Convert verified facts into approximations the writer cannot defend.** A precise number replaced with "many" or "several" or "about" creates a claim that no source can confirm.
+
+### Procedure
+
+1. **List the changes.** During the translation pass, keep a list of every term that was replaced. The list looks like a diff: original term, replacement, reason for replacement.
+2. **Re-verify each entry against the source.** For every replacement, ask: is the new wording true at its new level of precision? "v0.8.0" was true; is "the first version" also true?
+3. **Flag soft drift.** Replacements that lose precision without losing truth are fine ("v0.8.0" → "an early version" is true). Replacements that change the truth conditions are not fine and need a different rephrasing.
+4. **Restore precision when the translation breaks the claim.** If "the first version" is wrong because earlier versions existed, the rephrasing has to either include the version number, name the specific feature ("the new feature in that release"), or restructure the claim entirely.
+
+### Worked example (from the synthesis-coding article that prompted this protocol)
+
+Original prose: "I shipped synthesis-console v0.8.0 with the cockpit view of my daily plan."
+
+De-jargoning pass replaced: "synthesis-console v0.8.0" → "the first version of the dashboard."
+
+Translation-pass re-verification flagged: the dashboard had been shipping for many versions before v0.8.0; v0.8.0 added the cockpit view as a NEW FEATURE, not as the dashboard's first version. The replacement was wrong.
+
+Restored: "I shipped the cockpit view of the daily plan as a new feature." This preserves the accessibility goal (no version number) while keeping the claim true.
+
+The lesson: when removing version numbers, do not assume "first version" or "early version" without checking the version history. When removing tool names, do not assume the replacement description is structurally equivalent. The translation pass is an editing pass that produces new claims; treat it like one.
+
+---
+
+## 9. Documentation Template
 
 Create a `review-log.md` file alongside the draft to document the fact-checking process. This serves as an audit trail and protects against future challenges to the article's accuracy.
 
@@ -314,7 +357,7 @@ Create a `review-log.md` file alongside the draft to document the fact-checking 
 
 ---
 
-## 9. Pre-Publish Checklist
+## 10. Pre-Publish Checklist
 
 Run through this checklist after completing the fact-check review and before publishing. Every item should be checked.
 
@@ -328,6 +371,12 @@ Run through this checklist after completing the fact-check review and before pub
 - [ ] All organization names verified against official sources (not parent/subsidiary confusion)
 - [ ] No conflated findings -- each claim maps to a single finding in a single source
 - [ ] No hallucinated citations -- every cited source exists and says what the draft claims
+
+### Translation-Pass Integrity (if a de-jargoning, anonymization, or accessibility pass was applied)
+
+- [ ] Every term replaced via de-jargoning has been re-verified against the source material
+- [ ] No claim asserts something the source material does not (replacements have not introduced new, unverified claims)
+- [ ] Vague descriptors that replaced precise terms are accurate at the new level of precision (e.g., "an early version" is true even though the original "v0.8.0" was)
 
 ### Temporal Integrity (if article is backdated or date-sensitive)
 
