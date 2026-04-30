@@ -5,7 +5,7 @@ license: "CC0-1.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -216,12 +216,44 @@ This skill is designed to be executed by an AI agent (Claude Code, Cursor, etc.)
 
 The `install.sh` scripts in each repo serve as bootstrap/fallback installers for environments without an AI agent. They handle the mechanical parts (copy, provenance, checksums) but cannot do synthesis merge — they overwrite on conflict with a drift warning.
 
-## Source Update Protocol
+## Source Update Protocol (NON-NEGOTIABLE)
 
-When updating any skill:
+When updating any skill — whether one file or several — follow this exact sequence. Do not deviate. **Manual file copies to install targets are NOT installation.** They create drift between what is committed, what is pushed, and what is locally active. The protocol below exists because that drift has happened before and must not happen again.
 
-1. Edit the skill in its source repo first
-2. Commit the source repo change with an appropriate generic message
-3. Push to every configured remote for that repo, not just `origin`
-4. Reinstall or refresh the updated skill in local agent targets such as `~/.claude/skills/`, `~/.codex/skills/`, and `~/.agents/skills/`
-5. Verify installed copies match the source repo
+### The sequence
+
+1. **Edit the skill in its source repo.** All edits land in `<source-repo>/<skill-name>/SKILL.md`. Never edit installed copies under `~/.claude/skills/`, `~/.codex/skills/`, etc. — those are output, not source. Edits there are reset on the next `install.sh update`.
+
+2. **Verify the source repo state.** `git status` to confirm only the intended files changed. `git diff` to review the actual content of every change.
+
+3. **Commit with a generic message** per public-repo commit hygiene. "Update skills" or similar. No skill names, no version arc, no rationale that exposes the work that motivated the edit.
+
+4. **Identify all configured push remotes.** `git remote -v`. The skills repos may have multiple push remotes; the source-of-truth state is "the union of all configured push remotes is up to date."
+
+5. **Push to EVERY configured push remote**, not just `origin`. Loop over the remote names from step 4. Single-remote repos still use this step — it just iterates once.
+
+6. **Refresh local installations via `install.sh update`** — the canonical script in the source repo's root. The script pulls the source repo into a cache directory, then copies SKILL.md files from the cache to every install target (`~/.claude/skills/`, `~/.codex/skills/`, `~/.agents/skills/`, `~/.cursor/skills/` if present). It writes `.source.json` provenance with the commit hash and reports drift against existing installs.
+
+7. **Verify zero drift.** After `install.sh` completes, `diff -q` each installed copy against the source. They must be byte-identical:
+   ```bash
+   for target in ~/.claude/skills ~/.codex/skills ~/.agents/skills ~/.cursor/skills; do
+     for skill in <changed-skill-names>; do
+       diff -q "<source-repo>/$skill/SKILL.md" "$target/$skill/SKILL.md"
+     done
+   done
+   ```
+   Any output from `diff -q` is a failure. Investigate and re-run `install.sh update`.
+
+### What you must NOT do
+
+- **DO NOT** manually `cp` SKILL.md files from the source repo to install targets. The install targets are managed by `install.sh`, which writes `.source.json` provenance and runs drift detection. Manual `cp` skips both and produces files that look installed but are not canonically so.
+- **DO NOT** edit installed copies under `~/.claude/skills/`, `~/.codex/skills/`, etc. directly. Edits there are reset on next `install.sh update`. Source-repo edit is the only edit that survives.
+- **DO NOT** skip the push step before reinstalling. `install.sh` pulls from the configured remote; if you have not pushed, the install will refresh from a stale remote state and silently revert your local edits.
+- **DO NOT** skip the verify step. "I ran install.sh" is not the same as "the install matches the source." The drift check (`diff -q`) is the proof.
+- **DO NOT** ask for permission to push as if push were optional. Push is part of the install workflow, not a separate decision. If you have permission to update a skill, you have permission to push the source repo. Pausing between commit and push is the failure pattern that produced the 2026-04-29 incident — it leaves three different states of the truth (working tree, remote, installs) and the agent in the middle.
+
+### Why these rules are non-negotiable
+
+The 2026-04-29 incident: an agent edited four skill files in source, manually copied them to install targets to "install" them, then waited at the wrong gate before pushing. The result was three different states of the truth — source repo working tree (had the changes), GitHub (did not have the changes), install targets (had locally-copied files that drifted from what `install.sh update` would have produced). When `install.sh update` was finally run, it detected and overwrote the manually-copied drift. That detection-and-overwrite happened to be safe in that case, but it was luck, not design — the manual copies could just as easily have included an in-flight edit that the agent had not yet propagated to the source.
+
+The protocol above eliminates the asymmetry. Source is the only edit point. Push happens before install. Install runs the canonical script. The verify step proves the canonical state. There is no place for three-states-of-truth to sit.
