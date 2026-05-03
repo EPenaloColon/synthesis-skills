@@ -1,6 +1,10 @@
 # Detailed Criteria Reference
 
-Full explanations, examples, and fix guidance for each of the 36 AI content quality criteria.
+> **Pattern catalog — current as of 2026-05.**
+>
+> AI-generation patterns shift as new models are released. This catalog reflects observable patterns in production AI output as of the date above and is updated as model behavior evolves. The methodology in `SKILL.md` is the durable part; the specific patterns below grow over time as new ones become observable.
+
+Full explanations, examples, and fix guidance for the AI content quality criteria.
 
 ---
 

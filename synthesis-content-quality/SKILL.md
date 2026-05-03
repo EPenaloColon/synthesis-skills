@@ -17,7 +17,17 @@ metadata:
 
 # Content Quality
 
-A systematic methodology for developing high-quality AI-assisted content and identifying content that falls short. This framework defines 37 criteria organized into confidence tiers for evaluating whether AI-assisted content meets professional publishing standards.
+A systematic methodology for developing high-quality AI-assisted content and identifying content that falls short. This framework organizes evaluation criteria into confidence tiers — the catalog is refreshed as model behavior shifts and as new AI-generation patterns emerge in production output. The methodology is the durable part; the specific catalog grows over time.
+
+## Where this skill fits in the writing-quality family
+
+This skill catches AI-generation patterns specifically. It is one of three sibling skills:
+
+- **`synthesis-content-quality`** (this skill) — AI/LLM-generation patterns; refreshes with new model releases
+- [`synthesis-writing-pitfalls`](../synthesis-writing-pitfalls/SKILL.md) — Universal human-source bad-writing patterns; stable across decades
+- [`synthesis-writing-craft`](../synthesis-writing-craft/SKILL.md) — Positive principles from the writing-craft tradition
+
+Use all three together for a comprehensive quality pass. Use this one alone when the focus is specifically AI-source weaknesses.
 
 ## When to Use This Skill
 
@@ -37,9 +47,9 @@ AI-assisted content creation is legitimate and valuable. The distinction that ma
 
 The goal is quality assessment, not origin detection. No single indicator proves AI generation definitively. Detection requires pattern recognition across multiple indicators.
 
-## The 36 Quality Criteria
+## The Pattern Catalog
 
-Each criterion is tagged with its confidence tier: **[HIGH]**, **[MED]**, or **[LOW]**.
+Each pattern is tagged with its confidence tier: **[HIGH]**, **[MED]**, or **[LOW]**. The catalog grows as new AI-generation patterns become observable in production output; the methodology around it stays stable.
 
 ### Language and Tone Patterns
 
@@ -161,7 +171,7 @@ If any are present: very likely unedited AI output.
 
 ## What This Framework Does NOT Catch On Its Own
 
-The 37 criteria detect AI-shaped writing (saturated vocabulary, hyperbolic patterns, mechanical transitions), human-shaped writing that is too generic (criterion 26), and frame-level insider collapse (criterion 37). They do not, on their own, catch upstream framing failures — articles where the writer never asked the audience question and the draft inherits the source material's frame.
+The catalog detects AI-shaped writing (saturated vocabulary, hyperbolic patterns, mechanical transitions), human-shaped writing that is too generic (Lack of Personal Detail), and frame-level insider collapse (Insider Context Collapse). It does not, on its own, catch upstream framing failures — articles where the writer never asked the audience question and the draft inherits the source material's frame.
 
 For that, the prevention is upstream: a reader briefing before drafting (see [`synthesis-reader-briefing`](../synthesis-reader-briefing/SKILL.md)). Criterion 37 detects the failure in finished drafts; the briefing prevents it before drafting begins. Defense in depth: do both.
 
@@ -281,6 +291,19 @@ Before publishing AI-assisted content:
 
 If you cannot answer yes to most of these, revise further.
 
-## Related
+## Related Skills
+
+This skill is one of three in the writing-quality family:
+
+- [`synthesis-writing-pitfalls`](../synthesis-writing-pitfalls/SKILL.md) — Universal human-source bad-writing patterns (cringe, throat-clearing, caveat overload, sentence-level weakness, cliché reliance)
+- [`synthesis-writing-craft`](../synthesis-writing-craft/SKILL.md) — Positive writing principles synthesized from the writing-craft tradition
+- [`synthesis-reader-briefing`](../synthesis-reader-briefing/SKILL.md) — Pre-writing audience analysis (catches Insider Context Collapse upstream)
+- [`synthesis-article-writing`](../synthesis-article-writing/SKILL.md) — End-to-end article workflow with quality gates
+- [`synthesis-article-refresh`](../synthesis-article-refresh/SKILL.md) — Refresh and revitalize older articles
+- [`synthesis-voice-profiler`](../synthesis-voice-profiler/SKILL.md) — Generate a structured voice profile
+
+For detailed pattern explanations and fix guidance, see [`references/detailed-criteria.md`](references/detailed-criteria.md).
+
+---
 
 Part of the [synthesis writing](https://synthesiswriting.org) craft — the writer writes, the AI assists.
