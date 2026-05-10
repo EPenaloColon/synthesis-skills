@@ -99,6 +99,21 @@ This skill organizes the tradition by craft level, attributing each principle to
 
 **Cut adverbs.** Adverbs are usually a sign the verb was not strong enough. "Walked quickly" is weaker than "hurried." "Said angrily" is weaker than "snapped." Strengthen the verb; the adverb falls away.
 
+### Voice across registers (tradition exemplified by Zinsser, Strunk & White)
+
+The same writer's voice should sound different in different registers. Same person, different mode.
+
+- **Article voice:** considered, edited, can be more formal. Topic sentences and structured transitions are appropriate. Polish is expected.
+- **Social-media voice:** conversational, less polished, first-person throughout. Topic sentences and transitions read as essay-shaped and miss the medium. A few rough edges signal authenticity.
+- **Email voice:** between the two. More direct than articles, more polished than social. Subject and ask up front.
+- **Speech voice:** written for the ear. Short sentences. Concrete images. Repetition for emphasis. Listeners cannot re-read; the cadence has to do the work.
+
+Switching between them is a craft skill. The trap is writing in one register where another is required — most often, writing article voice into a social media post and producing prose that reads as AI-generated even when a human wrote it.
+
+The test: read the piece aloud. Does it sound right for where it will appear? If a sentence would feel out of place spoken in front of the actual reader (a colleague at a coffee shop, an audience scrolling LinkedIn, a journalist in an interview), revise it.
+
+For pattern-detection of register failures, see [`synthesis-writing-pitfalls`](../synthesis-writing-pitfalls/SKILL.md) criterion 22 and [`synthesis-content-quality`](../synthesis-content-quality/SKILL.md) criteria 38-41.
+
 ### Structure, openings, closings (tradition exemplified by Lamott, Stein)
 
 **Open with something concrete.** A specific image, scene, claim, or question. Generic openings ("There are many ways to think about X," "It is widely believed that Y") waste the reader's strongest attention moment.

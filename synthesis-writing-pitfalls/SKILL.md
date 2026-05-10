@@ -109,6 +109,8 @@ This is distinct from the AI-typical "exhausted metaphor" pattern (covered in `s
 
 22. **Register mismatch** [MED] — Writing in a register that does not fit the venue: corporate-formal in a personal essay, academic in a popular piece, breezy in a serious analysis. Fix: pick the register that matches audience and venue. Personal essays use first person and contractions. Popular technical writing uses active voice and concrete examples. Read a few exemplars in the target venue if unsure.
 
+**Article register in a social media post** is the dominant modern variant of this pitfall, and its symptoms are now common enough to be cataloged separately. They include: third-person narration of first-person experience ("the site" / "the audit" / "the fix" where it should be "my site" / "my audit" / "my fix"); formal severity labels imported from source material (CRITICAL / HIGH / MEDIUM in a conversational post); essay structure markers ("first", "second", "the principle", "the takeaway", "in summary"); no first-person pronouns in posts about the author's own work; no closing engagement; sentences over 25 words without compression; over-smoothed prose with no rhythmic variation. The same writer's voice should sound different in articles vs social posts — same person, different mode. See [`synthesis-content-quality`](../synthesis-content-quality/SKILL.md) criteria 38-41 for the AI-detectable variants and [`synthesis-content-distribution`](../synthesis-content-distribution/SKILL.md) "Social register vs article register" for the rationale and the expectation gap that drives the failure.
+
 For deeper examples and fix guidance on each pattern, see [`references/detailed-pitfalls.md`](references/detailed-pitfalls.md).
 
 ## Detection Process

@@ -76,6 +76,39 @@ Areas the active voice profile should cover for content distribution to work wel
 
 If no voice profile is active, ask the user to load one (or to describe their voice in conversation) before generating posts. Defaults applied without user input produce generic posts that read as machine-generated.
 
+## Social register vs article register
+
+Articles and social posts have different reader expectations. The same writer's voice should sound different in the two modes — same person, different register.
+
+| Dimension | Article | Social post |
+|---|---|---|
+| Time investment | Hours to days | One sitting |
+| Editing passes | Multiple | One or two |
+| Reader expectation | Reference, deep dive | Update, share, react |
+| Polish level | High | Medium-low (intentional) |
+| Voice register | Considered, can be more formal | Conversational, casual-professional |
+| Engagement goal | Click-through, share | Comment, react, repost |
+| AI-detectability tolerance | Lower | Much lower |
+
+**The expectation gap.** Readers expect articles to be edited; they expect social posts to be conversational. Over-polished social posts read as AI-generated and get skipped, even when a human wrote them. A few rough edges (a fragment, a casual word, a slight digression) signal authenticity.
+
+### Common AI-cadence failures specific to social posts
+
+These patterns are tolerable in articles and flag immediately in social:
+
+1. **Article structure imported wholesale.** Topic sentences, transitions, "the principle" / "the takeaway" / "first / second / finally" labels read as essay scaffolding in social register.
+2. **Imported spec language uppercase.** Formal severity labels (CRITICAL, HIGH, MEDIUM) lifted from technical specs read as press-release register in a conversational post. Translate to conversational equivalents.
+3. **Third-person narration of first-person experience.** Using "the site", "the audit", "the fix" instead of "my site", "my audit", "my fix" reads as third-party reporting. First-person throughout for personal-experience posts.
+4. **Long sentences (>25 words) without compression.** Essay register. Break them.
+5. **Over-smoothed prose with no rhythmic variation.** When every sentence is grammatically tidy and every paragraph the same shape, the post reads as machine-edited.
+6. **Closing the loop instead of inviting response.** Conversational posts invite a reply (question, observation, "tell me what you've seen"). Posts that wrap up cleanly are essay-shaped, not conversation-shaped.
+
+### Pre-publish register check
+
+Read the post aloud. If it sounds like prepared remarks instead of conversation, rewrite. The author's voice in social must be the author's actual voice, in less-polished form.
+
+For voice-specific rules tailored to a particular author, layer the author's voice profile on top — generate one with [`synthesis-voice-profiler`](../synthesis-voice-profiler/SKILL.md) if needed. For AI-pattern detection across both registers, see [`synthesis-content-quality`](../synthesis-content-quality/SKILL.md), which catalogs social-register failures (criteria 38-41) on top of the general pattern catalog.
+
 ## Sidecar File Convention
 
 Promotion content for a published article should live as a **sidecar markdown file alongside the article itself**, not in a separate project folder.

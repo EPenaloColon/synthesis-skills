@@ -143,6 +143,20 @@ Each pattern is tagged with its confidence tier: **[HIGH]**, **[MED]**, or **[LO
 
 37. **Insider Context Collapse** [HIGH] -- Right vocabulary deployed in a frame the reader does not share. The article references tools, abstractions, version numbers, code identifiers, internal events, or internal directories as if the reader has the writer's project context. Distinct from criterion 26 (lack of personal detail), which catches the OPPOSITE direction (writing too generic to convey expertise). Insider context collapse is writing too specific to the writer's frame for the reader to land on. The grammar is clean; the saturated AI vocabulary is absent; the meaning is private. Manifestations: tool or project names introduced without inline definition ("synthesis-console v0.8.0"); internal abstractions used as if known ("the cockpit's NEEDS YOU region," "the parser"); version numbers in prose ("v0.8.3 → v0.8.5"); code identifiers in prose without descriptive context (function names, class names, file paths); references to internal events ("another session reviewing the code," "the X arc"); internal directories or paths used as if the reader knows the project layout. The writer cannot detect this by re-reading — the writer is the insider. The check has to be procedural: every paragraph compared against an explicit reader briefing (see [`synthesis-reader-briefing`](../synthesis-reader-briefing/SKILL.md)). Fix: every internal term gets either an inline introduction on first use or a replacement with descriptive language. Threshold calibrates by genre: strict for technical/teaching, looser for personal-narrative where unexplained texture is part of the form.
 
+### Social-register failures (apply when the artifact is a social post)
+
+When the artifact is a social media post (LinkedIn, Twitter/X, Threads, BlueSky, Reddit, Facebook, Instagram), an additional class of patterns applies. Some are tolerable in articles but flag immediately in social. The threshold differs by register: criteria 1-37 apply to both; criteria 38-41 apply primarily to social.
+
+38. **Imported spec language uppercase** [HIGH for social, LOW for articles] -- Uppercase severity labels (CRITICAL, HIGH, MEDIUM, LOWER) lifted from technical specs into a LinkedIn or Twitter post. The labels read as press-release register in conversational mode. Fix: translate to conversational equivalents ("significant", "smaller", "minor") or describe without labeling.
+
+39. **Article structure in social posts** [HIGH for social] -- Topic sentences, transitions ("First", "Second", "Finally"), formal labels ("The principle", "The takeaway", "In summary") imported into a social post. Reads as essay, not conversation. Fix: reframe as thoughts flowing in real time, not structured exposition.
+
+40. **Third-person narration of first-person experience** [HIGH for social] -- A post about the author's own experience that uses "the site", "the audit", "the fix" instead of "my site", "my audit", "my fix". Reads as third-party reporting on the author. Fix: first-person throughout. Personal pronoun in every paragraph for long-form social.
+
+41. **Lack of closing engagement in social** [MED for social] -- Posts that close the loop cleanly and walk away. Conversational posts invite response. Fix: end with a question, an observation that begs a follow-up, or a deliberate variant of "tell me what you've seen." Not every post needs it, but the default is yes.
+
+For the register difference and the underlying rationale, see [`synthesis-content-distribution`](../synthesis-content-distribution/SKILL.md) section "Social register vs article register".
+
 For detailed explanations, examples, and fix guidance for each criterion, see [references/detailed-criteria.md](references/detailed-criteria.md).
 
 ## Confidence-Based Evaluation Process
