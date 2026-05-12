@@ -7,12 +7,24 @@
 #   GOOGLE_CLIENT_SECRET_PATH — path to client_secret.json (required)
 #   GOOGLE_MCP_CREDENTIALS_DIR — where per-user tokens are stored (default ~/.google_workspace_mcp/credentials)
 #   WORKSPACE_MCP_TOOL_TIER  — core|extended|complete (default complete)
+#   WORKSPACE_MCP_FOREGROUND — set to 1 when invoked by a process supervisor
+#                              (launchd, systemd). Causes the script to `exec`
+#                              uvx so the supervisor manages the actual server
+#                              process. Default 0 (backgrounded via nohup).
 #
 # Logs: $XDG_STATE_HOME/workspace-mcp/server.log (or ~/.local/state/workspace-mcp/server.log on Linux,
 #        ~/Library/Logs/workspace-mcp/server.log on macOS)
 # PID:  same dir, server.pid
 
 set -euo pipefail
+
+# Ensure uv tooling is on PATH. macOS launchd and Linux systemd start
+# processes with a sparse PATH that does not include ~/.local/bin, where
+# `uv` installs `uvx` by default. Without this export, the `nohup uvx ...`
+# call below fails with "nohup: uvx: No such file or directory" even when
+# the launch agent / unit file sets PATH in its environment block, because
+# that PATH does not always propagate cleanly to script subshells.
+export PATH="$HOME/.local/bin:$PATH"
 
 # Determine OS-idiomatic state directory
 case "$(uname -s)" in
@@ -48,8 +60,31 @@ fi
 
 TOOL_TIER="${WORKSPACE_MCP_TOOL_TIER:-complete}"
 
-# Launch detached. uvx comes from `uv` (install via https://docs.astral.sh/uv/)
-nohup uvx workspace-mcp --single-user --transport streamable-http --tool-tier "$TOOL_TIER" \
+# Resolve uvx explicitly. With a sparse PATH, `nohup uvx` backgrounds a child
+# that dies immediately when uvx is not found, and the failure surfaces as
+# the unhelpful "nohup: uvx: No such file or directory" in the log. Failing
+# fast here produces a clearer error and lets KeepAlive loops surface the
+# real problem instead of thrashing.
+UVX_BIN="$(command -v uvx || true)"
+if [ -z "$UVX_BIN" ]; then
+  echo "ERROR: uvx not found on PATH ($PATH)." >&2
+  echo "Install uv (https://docs.astral.sh/uv/) so that uvx lands in \$HOME/.local/bin, then retry." >&2
+  exit 1
+fi
+
+if [ "${WORKSPACE_MCP_FOREGROUND:-0}" = "1" ]; then
+  # Supervisor-managed (launchd, systemd). Backgrounding would orphan the
+  # server: the supervisor sees the wrapper script exit 0, reclaims the
+  # process group, and kills the workspace-mcp child. Exec replaces this
+  # shell with uvx so the supervisor tracks the actual server PID.
+  echo $$ > "$PID_FILE"
+  exec "$UVX_BIN" workspace-mcp --single-user --transport streamable-http --tool-tier "$TOOL_TIER" \
+    >>"$LOG_FILE" 2>&1
+fi
+
+# Interactive / manual launch: background via nohup so the user can close the
+# terminal without killing the server.
+nohup "$UVX_BIN" workspace-mcp --single-user --transport streamable-http --tool-tier "$TOOL_TIER" \
   >"$LOG_FILE" 2>&1 &
 
 echo $! > "$PID_FILE"

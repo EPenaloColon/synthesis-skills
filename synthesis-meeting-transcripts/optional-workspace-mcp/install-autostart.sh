@@ -61,8 +61,10 @@ install_macos() {
     <string>$TIER</string>
     <key>GOOGLE_MCP_CREDENTIALS_DIR</key>
     <string>$CREDS_DIR</string>
+    <key>WORKSPACE_MCP_FOREGROUND</key>
+    <string>1</string>
     <key>PATH</key>
-    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <string>$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
@@ -125,6 +127,8 @@ Environment="GOOGLE_CLIENT_SECRET_PATH=$GOOGLE_CLIENT_SECRET_PATH"
 Environment="WORKSPACE_MCP_PORT=$PORT"
 Environment="WORKSPACE_MCP_TOOL_TIER=$TIER"
 Environment="GOOGLE_MCP_CREDENTIALS_DIR=$CREDS_DIR"
+Environment="WORKSPACE_MCP_FOREGROUND=1"
+Environment="PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
 Restart=on-failure
 RestartSec=30
 
