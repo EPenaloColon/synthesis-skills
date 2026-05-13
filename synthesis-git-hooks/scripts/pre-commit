@@ -1,0 +1,144 @@
+#!/bin/bash
+#
+# synthesis-engineering git-hook engine (pre-commit).
+#
+# Reads policy from ~/.synthesis/git-hook-config.yaml via the Python sidecar
+# at _load_config.py. The sidecar classifies the current repo based on its
+# push remotes and emits the active pattern regex for this commit's tier set.
+#
+# Tier 0 (credentials: API keys, private key markers) ALWAYS runs.
+# Tier 1 (financial, HR, confidentiality markers, confidential names, etc.)
+# runs UNLESS every push remote matches a configured personal-remote pattern.
+#
+# This engine is part of the synthesis-engineering operational layer. The
+# distributable form is the `synthesis-git-hooks` skill at
+# https://github.com/synthesisengineering/synthesis-skills.
+#
+# Install: ~/.synthesis/git-hooks/install.sh (in the skill package) sets
+# `core.hooksPath` to ~/.synthesis/git-hooks/ and writes an initial config.
+#
+# Override the config path per-invocation:
+#   SYNTHESIS_GIT_HOOK_CONFIG=/path/to/custom.yaml git commit ...
+#
+# Bypass once (last resort; CLAUDE.md item: never without explicit approval):
+#   git commit --no-verify
+#
+
+set -euo pipefail
+
+CONFIG="${SYNTHESIS_GIT_HOOK_CONFIG:-$HOME/.synthesis/git-hook-config.yaml}"
+HOOK_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SIDECAR="$HOOK_DIR/_load_config.py"
+
+if [ ! -f "$CONFIG" ]; then
+    echo "synthesis-git-hooks: config not found at $CONFIG" >&2
+    echo "  Run the install script in the synthesis-git-hooks skill to set it up." >&2
+    exit 1
+fi
+if [ ! -f "$SIDECAR" ]; then
+    echo "synthesis-git-hooks: sidecar not found at $SIDECAR" >&2
+    exit 1
+fi
+
+# Sidecar emits shell-quoted assignments for: REPO_CLASS, ACTIVE_REGEX,
+# ALLOWLIST_REGEX, CHECK_COMMIT_MSG. Source them.
+eval "$(SYNTHESIS_GIT_HOOK_CONFIG="$CONFIG" python3 "$SIDECAR" --emit-shell-vars)"
+
+if [ -z "${ACTIVE_REGEX:-}" ]; then
+    # No active patterns — nothing to check. Delegate and exit.
+    export SYNTHESIS_REPO_CLASS="${REPO_CLASS:-strict}"
+    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || true
+    if [ -n "$REPO_ROOT" ]; then
+        REPO_HOOK="$REPO_ROOT/.githooks/pre-commit"
+        if [ -f "$REPO_HOOK" ] && [ -x "$REPO_HOOK" ]; then
+            exec "$REPO_HOOK"
+        fi
+    fi
+    exit 0
+fi
+
+# Determine which files to scan. Always exclude files that contain pattern
+# definitions by design — adding a name to the policy is the opposite of
+# leaking it, but the diff still matches.
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=AM 2>/dev/null || true)
+if [ -n "${DIFF_EXCLUDE_REGEX:-}" ] && [ -n "$CHANGED_FILES" ]; then
+    CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -v -E "$DIFF_EXCLUDE_REGEX" || true)
+fi
+
+MATCHES=""
+if [ -n "$CHANGED_FILES" ]; then
+    DIFF=$(echo "$CHANGED_FILES" | xargs git diff --cached --diff-filter=AM -U0 -- 2>/dev/null || true)
+    if [ -n "$DIFF" ]; then
+        # Stage 1: collect added lines that hit the active regex.
+        STAGE1=$(echo "$DIFF" | grep '^+' | grep -v '^+++' | grep -i -E "$ACTIVE_REGEX" || true)
+        # Stage 2: filter out allowlisted lines (e.g., SPDX license declarations).
+        if [ -n "$STAGE1" ] && [ -n "${ALLOWLIST_REGEX:-}" ]; then
+            STAGE1=$(echo "$STAGE1" | grep -ivE "$ALLOWLIST_REGEX" || true)
+        fi
+        MATCHES=$(echo "$STAGE1" | head -20)
+    fi
+fi
+
+if [ -n "$MATCHES" ]; then
+    cat <<EOF
+
+╔══════════════════════════════════════════════════════════════════╗
+║  ⚠️  SENSITIVE PATTERN DETECTED (synthesis-git-hooks)             ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Repo class: ${REPO_CLASS:-strict}
+Config: $CONFIG
+
+Matched lines:
+$MATCHES
+
+Sanitize the change, or — if this is intentional documentation about
+the patterns themselves — bypass once:
+  git commit --no-verify
+EOF
+    exit 1
+fi
+
+# Commit-message check (strict repos only by default; configurable).
+if [ "${CHECK_COMMIT_MSG:-0}" = "1" ]; then
+    COMMIT_MSG_FILE=""
+    if [ -f ".git/COMMIT_EDITMSG" ]; then
+        COMMIT_MSG_FILE=".git/COMMIT_EDITMSG"
+    elif GIT_DIR_PATH=$(git rev-parse --git-dir 2>/dev/null) && [ -f "$GIT_DIR_PATH/COMMIT_EDITMSG" ]; then
+        COMMIT_MSG_FILE="$GIT_DIR_PATH/COMMIT_EDITMSG"
+    fi
+    if [ -n "$COMMIT_MSG_FILE" ] && [ -f "$COMMIT_MSG_FILE" ]; then
+        MSG_MATCHES=$(grep -i -E "$ACTIVE_REGEX" "$COMMIT_MSG_FILE" 2>/dev/null | head -10 || true)
+        if [ -n "${ALLOWLIST_REGEX:-}" ] && [ -n "$MSG_MATCHES" ]; then
+            MSG_MATCHES=$(echo "$MSG_MATCHES" | grep -ivE "$ALLOWLIST_REGEX" || true)
+        fi
+        if [ -n "$MSG_MATCHES" ]; then
+            cat <<EOF
+
+╔══════════════════════════════════════════════════════════════════╗
+║  ⚠️  SENSITIVE PATTERN IN COMMIT MESSAGE (synthesis-git-hooks)    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Repo class: ${REPO_CLASS:-strict}
+
+Confidential content found in commit message:
+$MSG_MATCHES
+
+Rewrite the commit message without confidential references.
+EOF
+            exit 1
+        fi
+    fi
+fi
+
+# Export class for any delegated per-repo hook, then chain.
+export SYNTHESIS_REPO_CLASS="$REPO_CLASS"
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || true
+if [ -n "$REPO_ROOT" ]; then
+    REPO_HOOK="$REPO_ROOT/.githooks/pre-commit"
+    if [ -f "$REPO_HOOK" ] && [ -x "$REPO_HOOK" ]; then
+        exec "$REPO_HOOK"
+    fi
+fi
+
+exit 0

@@ -110,6 +110,7 @@ All skills are prefixed with `synthesis-` to prevent namespace collisions with s
 ### DevOps & Sync
 | Skill | Description |
 |-------|-------------|
+| `synthesis-git-hooks` | YAML-driven pre-commit policy: auto-classifies each repo by push remotes (personal vs strict), enforces tiered patterns for credentials and exposure-sensitive content |
 | `synthesis-mac-sync` | Multi-Mac config sync via iCloud with git repo sync and machine inventory |
 | `synthesis-meeting-transcripts` | Fetch AI-generated meeting notes and transcripts into local working files |
 | `synthesis-repo-guard` | Session-end enforcement: detect uncommitted changes and unpushed commits across a workspace |
