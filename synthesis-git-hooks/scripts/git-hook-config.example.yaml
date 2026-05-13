@@ -96,6 +96,11 @@ allowlist_lines:
 diff_exclude_paths:
   - '(^|/)synthesis-git-hooks/'
   - '(^|/)synthesis-anti-shortcuts/'
+  # Bundled skill packs (e.g. Ragbot's synthesis_engine.skills.starter_pack)
+  # legitimately discuss confidentiality / safety patterns in their bodies —
+  # that's the skill's curriculum, not a leak. Add similar directories as
+  # you create methodology-doc skills.
+  - '(^|/)skills/starter_pack/'
   # Add more methodology-doc directories as you create them.
 
 # Check commit messages (in addition to staged diffs) for `strict` repos.
