@@ -9,7 +9,7 @@ depends_on:
   - synthesis-repo-guard
 metadata:
   author: "Rajiv Pant"
-  version: "2.6.0"
+  version: "2.7.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
@@ -17,6 +17,28 @@ metadata:
 # Daily Rituals — Global Checklists
 
 Standard day-start and day-end rituals for synthesis engineering projects. These are the global (per-person) checklists. Each project may have a project-specific supplement that extends these with channel-specific sync, repo-specific checks, and stakeholder-specific communications.
+
+## v2.7.0 — Source-Code Sync as a First-Class Ritual Step
+
+In v2.7.0 (2026-05-21), source-code synchronization becomes an explicit, first-class step in both the day-start and day-end rituals — running BEFORE the daily plan is drafted (so any drafts that need to be grounded in code can read current source) and BEFORE end-of-day verification (so tomorrow's day-start begins from a clean, current state).
+
+**Rule:** for every source-code repo associated with active work in the current workspace, fetch from all configured remotes and fast-forward the default branches (typically `main` and `develop`, plus any other long-running branches the team uses) BEFORE drafting the daily plan and BEFORE the end-of-day repo-guard verification. The skill stays generic — the list of repos per workspace is declared in the workspace `CLAUDE.md` (or equivalent project context file), not hardcoded.
+
+**Why:**
+
+- **Drafts must be grounded in current code.** The grounding protocol (see below) requires draft messages to be grounded in primary sources before sending. If local source is days behind origin, a draft that cites a function or PR may be quoting a stale version. Pulling first means the grounding research uses the current code.
+- **Avoid surprise conflicts at end-of-day.** Running fetch + fast-forward at day-end (just before the repo-guard verification) surfaces upstream divergence early — the user doesn't discover at 6 PM that develop moved fifty commits and a feature branch needs rebasing.
+- **One step, not "I'll do it later."** Folding it into the ritual makes it deterministic. The earlier `git fetch --all` checkbox in v2.6.0 and prior was easy to skip and only fetched (no fast-forward) — v2.7.0 makes the step substantive and visible.
+
+**What goes where:**
+
+- This skill defines the GENERIC pattern (fetch from all push remotes, fast-forward default branches, surface diverged or behind-state, report which repos were touched).
+- The WORKSPACE-SPECIFIC list of repos lives in the workspace's `CLAUDE.md` (e.g., `~/workspaces/<workspace>/CLAUDE.md`'s "Workspace Repos" table). Each repo's specific multi-remote configuration is implicit from `git remote -v` inside that repo.
+- The PROJECT-SPECIFIC supplement may add per-project considerations (e.g., "after fetch, check whether feature/X is stale and needs rebase"). See "How to Create a Project Supplement" near the end of this file.
+
+**Sequence within day-start:** Context Optimization (Step 1) → **Source-code sync (Step 2a — NEW)** → Slack sync (Step 2b — was Step 2) → Meeting transcripts (Step 2c — was Step 2b) → Catch-up read (Step 3) → PR review queue (Step 4) → Day plan (Step 5) → Morning messages (Step 6).
+
+**Sequence within day-end:** Transcript sync (Step 1) → **Source-code sync (Step 2 — NEW)** → Integration sweep (Step 3 — was Step 2) → … → Repo guard final verification (Step 10 — was Step 9).
 
 ## v2.6.0 — Draft Numbering Convention (numbers, not letters)
 
@@ -107,12 +129,28 @@ Execute in this order (each step depends on the one before it).
 
 ### 2. Sync
 
-- [ ] `git fetch --all` on all active project repos.
-- [ ] Check for new PRs, CI results, overnight pushes.
+This step has three sub-steps. They run in order — source code first (so any draft can ground itself in current code), then channels (so the catch-up read uses today's messages), then transcripts of any auto-recorded meetings.
+
+#### 2a. Source-Code Sync
+
+Before drafting the daily plan, sync every source-code repo associated with active work in the current workspace. This makes sure any code-grounded drafts (PR reviews, technical replies, status messages citing specific files or commits) reference current state, not yesterday's.
+
+- [ ] Identify the active source-code repos for this workspace. The canonical list lives in the workspace's `CLAUDE.md` "Workspace Repos" table (e.g., `~/workspaces/<workspace>/CLAUDE.md`). The relevant entries are application-code repos — not ai-knowledge / context repos, which are handled separately.
+- [ ] For each repo: `git fetch --all` to pull from all configured remotes, then fast-forward the default branches the team works on (typically `main` + `develop`; some teams also have `staging`, a long-running release branch, etc.). Use `git pull --ff-only` per branch — never a merge or rebase that could introduce silent conflicts.
+- [ ] If any branch is **diverged** (local has commits the remote doesn't, AND remote has commits local doesn't), do NOT auto-resolve. Surface it in the day-plan briefing: "develop diverged in `<repo>` — N local commits vs M remote." Decide explicitly: rebase, merge, or leave it for the owner.
+- [ ] If a default branch is **behind**, fast-forward it. If it's **ahead** of remote only (local commits not pushed), surface that too — it's a "do I push?" decision, not an auto-action.
+- [ ] Report the touched repos with their before/after commit SHAs in the daily plan (e.g., "develop: aaaaaaa → bbbbbbb, 11 commits, includes ticket-id-here"). This gives the user a glanceable view of what arrived overnight.
+- [ ] Note any new branches that appeared on remotes (`git branch -r` shows them) — those may be feature branches worth knowing about even if not yet ready for review.
+
+The set of remotes for each repo comes from `git remote -v` inside that repo. The skill does NOT need a separate per-remote config — the repo itself is the source of truth for its own remote layout. When a workspace's primary remote changes (e.g., a migration from one Git host to another), the change happens in the local repo's `git remote -v`, and this step picks it up automatically.
+
+#### 2b. Slack Sync
+
+- [ ] Check for new PRs, CI results, overnight pushes (now that local repos are current).
 - [ ] **Run `/synthesis-slack-sync`** — the `synthesis-slack-sync` skill handles the full Slack sync protocol: verify connector auth, read all channels, re-read all threads with replies, check DMs, save to local transcripts, and update the action plan. See that skill for the detailed protocol and the rationale behind each step. Configuration is in `.agents/slack-sync.yaml` per project, with `.claude/slack-sync.yaml` supported for existing projects.
 - [ ] Run any project-specific sync steps (see project supplement).
 
-### 2b. Meeting Transcripts
+#### 2c. Meeting Transcripts
 
 After any standup, planning session, or design review with auto-generated notes (e.g., Gemini in Google Meet):
 
@@ -525,30 +563,40 @@ When observer mode is reinvented per conversation ("do the thing you did yesterd
 - [ ] **Run `/synthesis-slack-sync`** for final capture of the day. The `synthesis-slack-sync` skill ensures all channels, threads, and DMs are captured.
 - [ ] Update CONTEXT.md to mark any items resolved by day's conversations (so tomorrow's day-start does not re-propose them).
 
-### 2. Integration Sweep
+### 2. Source-Code Sync
+
+End-of-day code sync ensures local main/develop reflects everything that landed during the day and that tomorrow's day-start begins from a clean, current state. Run the same source-code sync as Day-Start Step 2a — same workspace repo list, same fetch + fast-forward semantics, same surfacing of divergence.
+
+- [ ] For each source-code repo in the workspace's `CLAUDE.md` "Workspace Repos" table: `git fetch --all`, then `git pull --ff-only` on each long-running branch (typically `main` and `develop`).
+- [ ] Surface any branches that are diverged or have local-only commits not yet pushed. These are decisions to make NOW, not at next day-start, so the agent can act on them while context is fresh.
+- [ ] Note the day's net change per repo (e.g., "develop +11 commits, includes ticket-id-here"). This summary becomes part of the day-end log and feeds tomorrow's day-start briefing.
+
+This step is intentionally not "merge ready PRs" — that's Integration Sweep below. This step is pure sync: pull latest state, surface divergence, do not modify history.
+
+### 3. Integration Sweep
 
 - [ ] Check PR queue — merge any ready PRs, push to staging.
 - [ ] Close GitHub PRs with integration comments (if using adopt-and-adapt pattern).
 - [ ] If a new version was deployed to staging or production, follow your team's release notification process. Best practice: list all PRs included, credit all contributors by name and PR number, post to both product and engineering channels.
 
-### 3. Communications
+### 4. Communications
 
 - [ ] Reply to any unanswered threads from today.
 - [ ] Post end-of-day status updates.
 - [ ] Send motivational or acknowledgment messages to contributors.
 
-### 4. Lessons Learned
+### 5. Lessons Learned
 
 - [ ] Document any reusable lessons in `lessons/` (patterns, mistakes, solutions that apply beyond this session).
 - [ ] Update project REFERENCE.md with any new stable facts discovered today.
 
-### 5. Career Amplification
+### 6. Career Amplification
 
 - [ ] Review today's work for content opportunities: blog posts, articles, videos, talks.
 - [ ] Note ideas in a running list (see thought-leadership writing skill for the full workflow when ready to write).
 - [ ] Themes to watch for: novel patterns, hard-won solutions, process innovations, team dynamics insights, industry observations.
 
-### 6. Context Capture
+### 7. Context Capture
 
 - [ ] Update CONTEXT.md with day's progress and new state.
 - [ ] Update MEMORY.md if current state info is stale (version numbers, environment status, team assignments).
@@ -556,16 +604,16 @@ When observer mode is reinvented per conversation ("do the thing you did yesterd
 - [ ] Commit and push context changes to ai-knowledge repos.
 - [ ] Push updates to any shared ai-knowledge repos if modified.
 
-### 7. Skills Maintenance
+### 8. Skills Maintenance
 
 - [ ] If any installed skill copies changed, check whether those edits need to be synced back to the source repo. Use `synthesis-skills-manager` or check `.source.json` provenance files.
 - [ ] If skills were updated in source repos, verify they were installed to the Claude Code, Codex, and cross-agent locations that use them.
 
-### 8. Machine Sync
+### 9. Machine Sync
 
 - [ ] Run mac-sync (credentials, config, git remotes across machines).
 
-### 9. Repo Guard — Final Verification
+### 10. Repo Guard — Final Verification
 
 **This step is mandatory and must be the last step before ending any session.**
 
@@ -573,7 +621,7 @@ When observer mode is reinvented per conversation ("do the thing you did yesterd
 - [ ] If ANY repos are dirty or unpushed, resolve them before ending: commit and push, or explicitly decide to discard.
 - [ ] Zero untracked files, zero uncommitted changes, zero unpushed commits. No exceptions.
 
-This is not the same as steps 6-8. Those steps commit specific known changes. This step is the **verification gate** that catches anything those steps missed — files from earlier in the session, changes in repos you forgot about, installed skill copies that were changed without source updates. The gate must pass before the session ends.
+This is not the same as steps 7-9. Those steps commit specific known changes. This step is the **verification gate** that catches anything those steps missed — files from earlier in the session, changes in repos you forgot about, installed skill copies that were changed without source updates. The gate must pass before the session ends.
 
 ---
 
