@@ -97,6 +97,16 @@ This is not specific to inbox-cleanup, but it bit this project hard during multi
 
 **Fix:** Use substring matching for subject keywords. The current implementation does this with `if any(kw in subject_lower for kw in SPARE_SUBJECT_KEYWORDS)`.
 
+## Subject rules support only positive `subject_contains`, not negation
+
+**Incident:** During the first triage session, a single sender (`no-reply@zoom.us`) was found to carry both legitimate Zoom subscription / expiry notices AND third-party-webinar spam confirmations (Zoom's email-confirmation pipeline gets hijacked by spammers running webinars on the platform). The natural rule shape — "from this address AND subject does NOT contain 'subscription' or 'expired' or 'renew' → trash" — isn't expressible in the manifest engine, which supports only positive `subject_contains` matching, not negation.
+
+**Why this matters:** Mixed-content senders aren't a Zoom-specific quirk. Any shared-infrastructure sender — webinar platforms, event-confirmation services, mailing-list relays, white-label notification systems — can carry both legit and unwanted content under one address.
+
+**Workaround for one-off cases:** Add an explicit `disposition: keep` rule for the sender so legit mail stays in inbox, then run a one-shot script that trashes only the non-legit subjects. This is what was done for Zoom (three spam messages trashed via a hardcoded `/tmp` script that distinguished by the legit-keyword list).
+
+**The signal to abstract:** when this pattern occurs a second time for a different sender, the engine should grow real support — either `subject_not_contains` in the existing `subject_rules` structure, or a separate `subject_exclude_rules` table. Until then, document each occurrence here so the eventual abstraction has multiple cases to design against. (Premature abstraction from one case commits to a wrong API.)
+
 ---
 
 These pitfalls were collected from real incidents during the development of this skill. Each one cost time, money, or risk. Adding a new pitfall to this file is part of the cost of resolving any new bug in the engine — better to document it now than rediscover it later.

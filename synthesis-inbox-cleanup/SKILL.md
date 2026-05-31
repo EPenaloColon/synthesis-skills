@@ -5,7 +5,7 @@ license: "Apache-2.0"
 depends_on: []
 metadata:
   author: "Rajiv Pant"
-  version: "1.0.0"
+  version: "1.1.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
   platform: "macOS (Apple Silicon and Intel)"
@@ -85,7 +85,24 @@ Output: every distinct sender in the inbox, sorted by volume, cross-referenced a
 
 ### 2. Triage the unmatched senders
 
-For each UNCLASSIFIED sender, the user (with optional LLM assistance) decides: keep / archive / newsletter / trash. The decision is added to `~/.synthesis/inbox-cleanup/rules.yaml`. New entries to `never_touch` require explicit human review — the LLM cannot modify that list (see "Prompt-injection defenses" below).
+**Examine actual content before classifying.** The census output shows volume and one example subject per sender — that is circumstantial signal, exactly what the circumstantial-inference pitfall (`references/pitfalls.md`) warns against. Run the inspector before deciding:
+
+```bash
+python3 icloud_inspect_senders.py "<address-pattern>" ["<pattern>" ...]
+```
+
+The inspector aggregates every matching INBOX message: distinct From variants with counts, date range, all unique subjects most-frequent first, plus one sanitized body sample from the most recent message. The body sample passes through `sanitize.py` (HTML strip + Unicode normalize + invisible/bidi/BOM strip + byte-budget truncation + `<UNTRUSTED_EMAIL>` demarcation) so an LLM agent assisting with triage receives content that cannot mount a credible prompt-injection attack.
+
+Then decide: keep / archive / newsletter / trash. The decision is added to `~/.synthesis/inbox-cleanup/rules.yaml`. New entries to `never_touch` require explicit human review — the LLM cannot modify that list (see "Prompt-injection defenses" below).
+
+**The past-archive-but-future-keep pattern.** When you want a personal contact's existing backlog out of inbox but their future mail visible (settled recruiting threads, completed intros, stale event chatter), the manifest engine can't express that — it routes by sender pattern, not by date or thread state. Two-step solution:
+
+```bash
+# 1. Add a people_known (or other keep-class) rule for the address in
+#    ~/.synthesis/inbox-cleanup/rules.yaml so future mail keeps in inbox.
+# 2. Imperatively archive the current backlog from that address:
+python3 icloud_archive_senders.py <address> [<address> ...] --apply
+```
 
 ### 3. Dry-run plan (read-only)
 
@@ -125,7 +142,7 @@ Spare-rules live in `~/.synthesis/inbox-cleanup/config.yaml` — exact recipient
 python3 icloud_tail.py
 ```
 
-After a sweep, the long tail of senders still in inbox that match no manifest rule. The ongoing work-list.
+After a sweep, the long tail of senders still in inbox that match no manifest rule. The ongoing work-list. Feed the volume-sorted top entries to `icloud_inspect_senders.py` (step 2) to ground each decision in actual content.
 
 ### Microsoft 365 and outlook.com
 
