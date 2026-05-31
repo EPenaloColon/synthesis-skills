@@ -18,7 +18,7 @@ Real incidents that motivated specific design decisions in this skill. Read this
 
 **Why it matters for this skill:** The engine routinely needs to decide "is this sender legit," "is this account mine," "should this address be in `never_touch`." Circumstantial inference from address patterns and domain ownership is not evidence. The primary data — message body content, billing entity, account ID, tax info — is one fetch call away.
 
-**Fix:** Before asserting a fact about identity, ownership, billing, or account state, examine the primary source. For categorization that requires identity confidence, prefer fetching the body to inferring from headers. The discipline applies whenever a chain of reasoning runs `[domain ownership] → [a tenant exists at that domain] → [therefore the domain owner owns the tenant]` — the chain is broken at the second arrow, because anyone with current or historical DNS access could have set up the tenant.
+**Fix:** Before asserting a fact about identity, ownership, billing, or account state, examine the primary source. For categorization that requires identity confidence, prefer fetching the body to inferring from headers.
 
 **Anti-pattern signature:** any reasoning chain that goes `[domain ownership] → [a tenant exists at that domain] → [therefore the domain owner owns the tenant]` is broken at the second arrow. Anyone with current or historical DNS access could have set up the tenant.
 
