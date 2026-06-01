@@ -107,6 +107,18 @@ This is not specific to inbox-cleanup, but it bit this project hard during multi
 
 **The signal to abstract:** when this pattern occurs a second time for a different sender, the engine should grow real support — either `subject_not_contains` in the existing `subject_rules` structure, or a separate `subject_exclude_rules` table. Until then, document each occurrence here so the eventual abstraction has multiple cases to design against. (Premature abstraction from one case commits to a wrong API.)
 
+## DKIM / SPF / DMARC pass confirms identity, not intent — do not use authentication as evidence of legitimacy
+
+**Incident:** A user flagged an inbox message as "almost certainly a scam or phishing email." The agent inspected the message, found that DKIM, SPF, and DMARC all passed cleanly, the sender was relayed via a known ESP, and the body contained no credential prompts or suspicious URLs. The agent presented this as evidence the message was likely legitimate (probably a real but unsolicited "order confirmation" from a brand-named domain). The user then clarified that they had not ordered the product and were not at any event where they would have signed up. The user was correct; the agent's analysis had over-weighted technical authentication signals against the user's stated context.
+
+**Why this matters:** Domain authentication confirms that the sender controls the DNS and signing keys for the domain they claim. It does NOT confirm that the sender's intent is benign. A scammer who buys a lookalike domain — or a "support" / "info" TLD sibling of a known brand — and configures DKIM, SPF, and DMARC properly will pass all three checks. Spoofed-brand domains often pass authentication because they are real domains (just controlled by the scammer, not the brand). The harder the brand is to register, the more cheap-TLD imitators show up to pass auth on a different domain.
+
+**The dispositive signal is user context, not technical signals.** When a user says "I didn't order this," "I have no account with this company," "I never signed up," or "I have no relationship with this sender," that signal is more reliable than any DKIM / SPF / DMARC pass. The user has knowledge the agent does not — what they bought, who they met, where they were. The agent can only see headers.
+
+**Rule for LLM-agent inspection paths:** when presenting technical-signal analysis of a message a user has flagged as suspicious, frame authentication as evidence of *domain ownership* only — never as evidence of *benign intent*. If the user's stated context contradicts the technical signals, default to the user's context. The right phrasing is "this domain successfully authenticated as itself" — not "this is likely legitimate." A two-axis verdict is correct: authenticated-by-claimed-domain (yes/no, from headers) AND wanted-by-recipient (yes/no, from user context). Both are needed; either alone misleads.
+
+**Routing implication:** when a user-flagged spoofed-brand domain is identified, add it to the manifest's sender rules as `cold_sales` (trash) — including the parent domain so future subdomains (`em<N>.brand.<tld>`, `mail.brand.<tld>`, etc.) auto-route without re-prompting.
+
 ## Subject rules required a `domain` clause and only matched substrings — calendar protocol responses had no clean rule shape
 
 **Incident:** Meeting acceptance / decline / tentative / canceled-event responses from colleagues were piling up in inbox because the manifest engine couldn't express the natural rule shape: "any sender, subject starts with `Accepted:` (or `Declined:` etc.) → archive." Two specific gaps surfaced together:

@@ -4,6 +4,16 @@ All notable changes to Synthesis Skills are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers follow [Semantic Versioning](https://semver.org/).
 
+## [3.3.1] - 2026-06-01
+
+### Changed
+
+- **`synthesis-inbox-cleanup`** bumped to **v1.2.1** — adds a pitfall entry to `references/pitfalls.md`: "DKIM / SPF / DMARC pass confirms identity, not intent — do not use authentication as evidence of legitimacy." Operational lesson captured from a real session where the agent over-weighted technical authentication signals against the user's stated context ("I didn't order this"). The fix is a framing rule for LLM-agent inspection paths: present authentication results as evidence of domain ownership only, never as evidence of benign intent. When user-stated context contradicts technical signals, default to user context — they know what they bought, who they met, where they were; the agent only sees headers. No engine code change; documentation-only refresh.
+
+### Rationale
+
+Spoofed-brand domains routinely pass full authentication because they are real domains controlled by the impersonator, just registered on cheaper TLDs (`.support`, `.info`, `.org` siblings of a `.ai` brand). The DKIM / SPF / DMARC stack confirms "this domain authenticated as itself" — never "this sender is benign." Codifying the two-axis verdict (authenticated-by-claimed-domain AND wanted-by-recipient) so future sessions don't repeat the same misweighting.
+
 ## [3.3.0] - 2026-06-01
 
 ### Changed
