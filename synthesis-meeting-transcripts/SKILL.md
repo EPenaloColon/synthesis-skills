@@ -5,10 +5,14 @@ license: "Apache-2.0"
 metadata:
   depends_on: "synthesis-daily-rituals (optional integration)"
   author: "Rajiv Pant"
-  version: "0.2.0"
+  version: "0.3.0"
   source_repo: "github.com/synthesisengineering/synthesis-skills"
   source_type: "public"
 ---
+
+## v0.3.0 — Mandatory verification step + don't-extract-from-email rule
+
+In v0.3.0 (2026-06-03), the skill adds a **mandatory post-save verification step** (new Step 4.5) and an explicit "do not extract from the Gemini email" warning at Step 3. Both changes target a specific failure mode: an agent reads the Gemini-notes email body (which is a summary), writes that to the local file, and never fetches the underlying Drive doc that contains the verbatim word-for-word transcript. The verification step uses the bundled `verify_transcripts.py` script (counts timestamp markers + speaker-attribution lines) to detect summary-only saves before they silently land.
 
 ## v0.2.0 — Workspace-Rooted Paths
 
@@ -118,6 +122,14 @@ Use the available Drive file-read tool to fetch the full content. Gemini notes d
 
 A well-behaved Drive file-read tool returns both tabs in a single fetch (verified: workspace-mcp's `get_drive_file_content` does this). If the tool only returns the first tab, note the limitation and fetch the second tab explicitly via the Docs API tabs feature if available.
 
+### ⚠️ DO NOT extract content from the Gemini email summary
+
+Gemini sends an email when meeting notes are generated. **That email is a summary of the summary** — it contains the high-level recap + next steps but NOT the verbatim transcript with speaker dialogue and timestamps. Reading the email and saving its content is the #1 way agents accidentally lose 90% of the meeting record. The verbatim transcript ONLY lives in the Drive doc, never in the email.
+
+**Rule:** Locate the Drive doc ID (from the email's "Open meeting notes" button, or via the Drive search in Step 2) and fetch the FULL Drive doc via the file-read tool. The email is for discovery only — never for content extraction.
+
+The Step 4.5 verification below catches this failure mode mechanically — by counting timestamps and speaker-attribution lines in the saved file rather than trusting the agent's belief that "this looks complete."
+
 ### Step 4: Save to local transcript archive
 
 Write to `{transcripts_repo}/{transcripts_path}/meetings/{meeting-slug}-{date}.md` with this header:
@@ -138,6 +150,36 @@ Write to `{transcripts_repo}/{transcripts_path}/meetings/{meeting-slug}-{date}.m
 If a file already exists at that path:
 - Check if it's identical to what was just fetched. If yes, report "already synced" and skip.
 - If different (Gemini sometimes regenerates), prefer the newly-fetched version but preserve the old one as `{path}.old-{timestamp}.md` so nothing is lost.
+
+### Step 4.5: 🚨 MANDATORY VERIFICATION — confirm both halves landed
+
+Before declaring the meeting fetched, **verify the saved file contains BOTH the notes summary AND the verbatim transcript.** A summary-only save is a silent failure that costs hours later when someone needs the actual dialogue and finds only paraphrase.
+
+**Run the verifier:**
+
+```bash
+python3 ~/.claude/skills/synthesis-meeting-transcripts/verify_transcripts.py \
+    {transcripts_repo}/{transcripts_path}/meetings/ \
+    --only-incomplete
+```
+
+The script counts timestamp markers (`00:01:31`-style) in each meeting file. A real Gemini transcript has ~5–50 timestamps; a summary-only save has 0–2. If the just-saved file shows `INCOMPLETE`, re-fetch the Drive doc and re-save — your earlier extraction missed the Transcript tab.
+
+**Failure modes this catches:**
+- Saved the Gemini email body instead of the Drive doc
+- Read only the first tab of a multi-tab doc
+- Wrote a curated summary on top of the email and forgot the verbatim half
+- Drive file-read tool returned an abbreviated form
+
+**This step is not optional.** Saving a meeting transcript without the verbatim section is the failure mode that prompted this verification step — a class of error where an agent silently substitutes a summary for the actual substance the protocol requires.
+
+If the verifier is missing or unrunnable in the current environment, you MUST manually grep the saved file for ≥5 timestamp markers before declaring done:
+
+```bash
+grep -cE '^\*?\*?[0-9]+:[0-9]+(:[0-9]+)?\*?\*?' <saved-file>
+```
+
+If count < 5, you have not saved the full transcript. Re-fetch the Drive doc.
 
 ### Step 5: Update indices (optional)
 
