@@ -148,4 +148,48 @@ subject_rules:
 
 ---
 
+## `imapsync` flag names must be verified against `--help` before destructive runs
+
+**Incident:** During a Gmail-to-Gmail mailbox migration, an `imapsync` invocation was launched with the flag `--delete` intended to delete from source after confirmed transfer to destination. The actual flag is `--delete1` (with the trailing `1` indicating "host1 = source"). The wrong-named flag was interpreted as a supplementary argument; `imapsync` exited 64 immediately with the message *"Found 1 supplementary arguments: [--delete]. It usually means a quoting issue in the command line or some misspelled or unknown options."* The script wrapping the call captured this exit code, marked the run as failed, and returned — but the user wasn't watching the log in real time, so the failure went undetected for hours. The destructive operation simply never happened; the source mailbox stayed intact.
+
+A separate flag error in the same migration session: `--maxerrors` (plural) was used; the real flag is `--maxerror` (singular). Same silent-exit-64 failure mode.
+
+**Why it matters:** `imapsync` has a `--delete2` flag too. `--delete1` deletes from the source after successful transfer (this is "move" semantics, the usual goal). `--delete2` deletes from the *destination* messages that aren't on the source — destructive sync in the wrong direction, the opposite of what most users want. A typo that lands on `--delete2` instead of `--delete1` would silently destroy destination state. The pattern of "looks intuitive but is actually wrong" extends across the imapsync option list.
+
+**The rule:** Before launching any imapsync run that triggers destructive behavior (any flag matching `--delete*`, `--expunge*`, `--regextrans*`, `--regexflag`, `--regexmess`), verify the exact flag name against the binary's `--help` output:
+
+```bash
+imapsync --help 2>&1 | grep -i -A1 -E "delete|expunge"
+```
+
+This is fast (under a second) and prevents an entire class of "I lost an hour because a flag I half-remembered doesn't exist" failures. The cost of the verification is trivial compared to the cost of re-running a multi-hour Gmail migration.
+
+**Specific corrections from the canonical incident:**
+
+| What you might remember | What actually works |
+|---|---|
+| `--delete` | `--delete1` (source) or `--delete2` (destination) |
+| `--maxerrors` | `--maxerror` (singular) |
+| `--expunge` | `--expunge1` or `--expunge2` |
+| Standalone numeric flags | Most are paired with `1` or `2` to specify host1/host2 |
+
+## Gmail IMAP throttle makes `imapsync` ETA throttle-bound, not bandwidth-bound
+
+**Incident:** A Gmail-to-Gmail migration of ~1,000 unique messages (~300 MiB total) was estimated at 15–30 minutes based on Gmail's documented IMAP transfer ceiling of roughly 1.5 MiB/sec. Actual observed transfer rate: **0.10 messages/sec, ~14 KiB/sec** sustained. The full run took just under 3 hours of wall-clock for the copy phase alone, an order of magnitude longer than the byte-count estimate suggested.
+
+**Why it happens:** Gmail's IMAP server enforces per-account throttling that prioritizes interactive use (Gmail web UI, mobile clients) over sustained automated transfers. The 1.5 MiB/sec figure represents an upper bound under non-throttling conditions; in practice, sustained transfer from a single account during normal Google business hours runs at 1–2 orders of magnitude slower. The throttle scales with the destination account's activity, source account's activity, time of day, and Google's current capacity headroom.
+
+**The rule:** Do not predict Gmail migration ETA from byte totals or message counts in advance. Instead:
+
+1. Launch the run with a low-bar early-progress estimate ("at least 10 minutes for the initial folder walk; will revise after 5 minutes of observation").
+2. After 5 minutes of run time, sample the actual `msgs/sec` from the log tail.
+3. Compute the projected wall-clock from `(total_unique_messages / observed_msgs_per_sec)`.
+4. Report the revised ETA explicitly to the user. Do not let an early under-estimate stand.
+
+For a fresh account-pair migration of ~1,000 unique messages, plan on 2–3 hours wall-clock as the baseline. Faster is a pleasant surprise; slower is normal under aggressive throttling.
+
+**Implication for orchestration:** A multi-hour run cannot live inside a single conversation session's lifetime. Use a shell-level detachment pattern (`nohup` + stdio redirection + `disown`) so the imapsync process re-parents to `init` and survives any session reset, terminal disconnect, or harness lifecycle event. The harness's `background-task` mechanism is not equivalent — it tracks the task and can terminate it.
+
+---
+
 These pitfalls were collected from real incidents during the development of this skill. Each one cost time, money, or risk. Adding a new pitfall to this file is part of the cost of resolving any new bug in the engine — better to document it now than rediscover it later.
