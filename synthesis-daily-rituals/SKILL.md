@@ -19,6 +19,26 @@ metadata:
 
 Standard day-start and day-end rituals for synthesis engineering projects. These are the global (per-person) checklists. Each project may have a project-specific supplement that extends these with channel-specific sync, repo-specific checks, and stakeholder-specific communications.
 
+## v2.10.0 — Cockpit Mode: Budget-Bound, Stakes-Routed Day Plans
+
+In v2.10.0 (2026-06-12), the day plan gains an alternative canonical mode — **Cockpit Mode** — for users whose discretionary time is scarce and preemption-prone (heavy meeting load, frequent same-day scheduling). The classic mode (full prioritized task board) remains valid; Cockpit Mode is the recommended default when the user's open-item count persistently exceeds what their calendar can absorb. Design rationale and the originating six-week evidence base live with the user's working-system design doc; the durable protocol is here.
+
+**The three rules of Cockpit Mode:**
+
+1. **Budget before backlog.** The plan generation step reads the user's calendar FIRST, computes discretionary windows, and commits at most ~70% of them — the remainder is an explicit preemption buffer. The plan header states the arithmetic (`Budget: windows … = N min. Committed: M min (≤70%). Buffer: N−M min`). A plan that ignores the calendar is a wish list.
+
+2. **Stakes-routed outbound (the tier matrix).** Every outbound communication is classified at creation:
+   - **Tier A — agent sends, clearly agent-labeled** (per the user's bot-labeling rule): routing/triage pings, scheduling requests, receipt acknowledgments, info relays with citations, follow-up nudges on delegated items. Sent within the work block; every send logged to a `## On your behalf` section in the day plan (the TICKER). Tier A never expresses the user's opinions, makes commitments, or touches sensitive relationships. Requires the user's standing approval of the matrix before activation; until then, Tier A routes to Tier B.
+   - **Tier B — one-tap queue:** drafts in the user's voice (kudos, substantive replies) and decisions-with-recommendation, presented in batches of ≤5 with APPROVE / EDIT / SKIP affordances answerable in one line. Two review windows per day.
+   - **Tier C — user-original:** deep work and relationship-critical writing. **Maximum 3 per plan**, each assigned to a named calendar window.
+   Ambiguity routes to Tier B, never to Tier A.
+
+3. **Preemption is normal, not failure.** When a same-day meeting lands on a committed window, the lowest-priority Tier-C item drops to the queue automatically — no re-planning ceremony. Dropped and expired items are caught by the `synthesis-catchup-ledger` ratchet (see that skill); decay rules apply at plan-generation time (stale kudos auto-expire to a consolidated-send; DECAYING items carry do-by dates; event-bound items expire at their event).
+
+**Plan format additions (cockpit-vocabulary compatible):** a `**Budget:**` line in the header; one `## ⚡ Decision needed` H2 when a decision is pending (max ONE per day where possible); `## 🎯 Today — N deep items` (the Tier-C slots); `## ☑️ One-tap batch` (Tier B, with a queued-overflow paragraph); `## On your behalf` (Tier A log); `## 📰 Brief` (readable in ≤90 seconds). Consumers (synthesis-console) treat `On your behalf` as a new lower-row collapsible until typed support ships.
+
+**Relationship to rituals:** day-start still runs the full sync stack (Steps 1–5 unchanged) — Cockpit Mode changes only Step 6 (Day Plan) and Step 7 (Morning Messages: Tier A items send instead of queueing, once the matrix is approved). The user's ritual calendar blocks become review windows; briefs should be prepared BEFORE the block begins whenever the agent runs scheduled/continuous.
+
 ## v2.9.0 — Temporal & State Verification as Day-Start Step 1; new synthesis-checkpoint dependency
 
 In v2.9.0 (2026-05-27), the Day-Start ritual gains a new Step 1 — "Temporal & State Verification" — that runs BEFORE all other day-start steps. It anchors today's date from `date`, runs `git log` per active project to verify "last session," and reconciles cached `last_session` fields against git timestamps. Triggered by the 2026-05-27 inbox-cleanup mis-dated-session-log incident; codified to prevent recurrence in any synthesis project.
