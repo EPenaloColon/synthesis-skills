@@ -21,6 +21,14 @@ Configuration: read from ~/.synthesis/inbox-cleanup/config.yaml, section `catcha
   spare_subject_keywords: substrings that spare a message regardless of recipient
                          (e.g., when you administer Google Workspace under a
                           family member's domain and notices arrive here)
+  google_subject_trash:  subject substrings marking an account-LIFECYCLE notice
+                         (inactivity / "being deleted" / "sign in to keep it").
+                         Such notices are always about an account you do NOT own —
+                         your active accounts never receive them — and the owner is
+                         named only in the body, which no rule reads. Google mail
+                         matching one of these is trashed even when addressed to a
+                         spare/real recipient (e.g., your catch-all set as a
+                         stranger's recovery address). Empty/omitted = feature off.
 
 Dry-run by default; --apply to actually trash. Trash is recoverable ~30 days.
 """
@@ -34,6 +42,7 @@ CATCHALL = CONFIG.get("catchall", {})
 DOMAINS = [d.lower() for d in (CATCHALL.get("domains") or [])]
 SPARE_RECIPIENTS = {a.lower() for a in (CATCHALL.get("spare_recipients") or [])}
 SPARE_SUBJECT_KEYWORDS = {k.lower() for k in (CATCHALL.get("spare_subject_keywords") or [])}
+SUBJECT_TRASH = [s.lower() for s in (CATCHALL.get("google_subject_trash") or [])]
 
 
 def is_google_from(addr: str) -> bool:
@@ -113,6 +122,15 @@ def main():
                 continue
             recipients = parse_addrs(msg.get("To", "")) + parse_addrs(msg.get("Cc", ""))
             subj = dec(msg.get("Subject", ""))
+            # Account-lifecycle override: a Google inactivity/deletion notice is always
+            # about an account you do NOT own (your active accounts never get them), so
+            # trash it even when addressed to a spare/real recipient on the catch-all —
+            # e.g. a stranger set your catch-all as their Google recovery address.
+            ca = next((a.lower() for a in recipients if is_catchall_recipient(a.lower())), None)
+            if ca and SUBJECT_TRASH and any(p in subj.lower() for p in SUBJECT_TRASH):
+                matches.append((uid, from_addrs[0].lower(), ca, subj))
+                sender_count[from_addrs[0].lower()] += 1
+                continue
             ra = find_match(recipients, subj)
             if not ra:
                 continue

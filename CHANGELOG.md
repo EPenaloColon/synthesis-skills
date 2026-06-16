@@ -4,6 +4,16 @@ All notable changes to Synthesis Skills are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers follow [Semantic Versioning](https://semver.org/).
 
+## [3.6.2] - 2026-06-15
+
+### Added
+
+- **`synthesis-inbox-cleanup` bumped to v1.2.3** — `icloud_catchall_google_purge.py` gains a `catchall.google_subject_trash` config list. Google account-lifecycle notices (inactivity / "being deleted" / "sign in to keep it") are now trashed by subject even when addressed to a real/spare recipient on the catch-all, not only to stranger aliases.
+
+### Rationale
+
+A catch-all domain owner's real address can be set by a stranger as the recovery address on the stranger's own Google account; Google then mails account-lifecycle notices to the owner's inbox. The manifest keeps them unconditionally because the Google sender lives in `never_touch` (to protect the owner's genuine security mail), and `never_touch` outranks `subject_rules` — so only a separate purge can remove them. The owner's own accounts are active and never receive lifecycle notices, so the subject is a safe deterministic signal; the account being warned about is named only in the body, which no rule reads. Security-alert and sign-in subjects do not match the list and stay in the inbox.
+
 ## [3.6.1] - 2026-06-12
 
 ### Changed
