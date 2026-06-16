@@ -29,6 +29,12 @@ Configuration: read from ~/.synthesis/inbox-cleanup/config.yaml, section `catcha
                          matching one of these is trashed even when addressed to a
                          spare/real recipient (e.g., your catch-all set as a
                          stranger's recovery address). Empty/omitted = feature off.
+  google_lifecycle_senders: sender domains the google_subject_trash rule applies
+                         to (default ["accounts.google.com"] — Google's personal-
+                         account system). Workspace / billing senders
+                         (workspace-noreply@google.com, payments-noreply@google.com)
+                         are never matched, so admin/billing notices for a domain
+                         you manage are never trashed by this rule.
 
 Dry-run by default; --apply to actually trash. Trash is recoverable ~30 days.
 """
@@ -43,6 +49,7 @@ DOMAINS = [d.lower() for d in (CATCHALL.get("domains") or [])]
 SPARE_RECIPIENTS = {a.lower() for a in (CATCHALL.get("spare_recipients") or [])}
 SPARE_SUBJECT_KEYWORDS = {k.lower() for k in (CATCHALL.get("spare_subject_keywords") or [])}
 SUBJECT_TRASH = [s.lower() for s in (CATCHALL.get("google_subject_trash") or [])]
+LIFECYCLE_SENDERS = {s.lower() for s in (CATCHALL.get("google_lifecycle_senders") or ["accounts.google.com"])}
 
 
 def is_google_from(addr: str) -> bool:
@@ -77,6 +84,38 @@ def find_match(addrs, subject: str = ""):
         if is_catchall_recipient(a):
             return a
     return None
+
+
+def is_lifecycle_sender(addr: str) -> bool:
+    """True only for Google's PERSONAL-account system (LIFECYCLE_SENDERS, default
+    accounts.google.com). Workspace / billing senders (workspace-noreply@google.com,
+    payments-noreply@google.com) are deliberately excluded, so admin/billing notices
+    for a domain you manage are never caught by the account-lifecycle trash."""
+    addr = addr.lower()
+    if "@" not in addr:
+        return False
+    domain = addr.rsplit("@", 1)[1]
+    return any(domain == s or domain.endswith("." + s) for s in LIFECYCLE_SENDERS)
+
+
+def should_lifecycle_trash(from_addr: str, recipients, subject: str):
+    """Return the matched catch-all recipient if this is a stranger personal-account
+    LIFECYCLE notice to trash, else None.
+
+    Fires ONLY for LIFECYCLE_SENDERS (the personal-account system) and only when the
+    subject matches a google_subject_trash phrase — and NEVER when the subject names
+    a protected domain (spare_subject_keywords). So a notice about a domain you
+    administer is kept: such notices arrive from a Workspace/billing sender (excluded
+    here) and/or name the domain in the subject (spared here).
+    """
+    if not SUBJECT_TRASH or not is_lifecycle_sender(from_addr):
+        return None
+    sl = (subject or "").lower()
+    if not any(p in sl for p in SUBJECT_TRASH):
+        return None
+    if any(kw in sl for kw in SPARE_SUBJECT_KEYWORDS):
+        return None
+    return next((a.lower() for a in recipients if is_catchall_recipient(a.lower())), None)
 
 
 def parse_addrs(header_value: str):
@@ -122,13 +161,15 @@ def main():
                 continue
             recipients = parse_addrs(msg.get("To", "")) + parse_addrs(msg.get("Cc", ""))
             subj = dec(msg.get("Subject", ""))
-            # Account-lifecycle override: a Google inactivity/deletion notice is always
-            # about an account you do NOT own (your active accounts never get them), so
-            # trash it even when addressed to a spare/real recipient on the catch-all —
-            # e.g. a stranger set your catch-all as their Google recovery address.
-            ca = next((a.lower() for a in recipients if is_catchall_recipient(a.lower())), None)
-            if ca and SUBJECT_TRASH and any(p in subj.lower() for p in SUBJECT_TRASH):
-                matches.append((uid, from_addrs[0].lower(), ca, subj))
+            # Account-lifecycle override: a personal-account inactivity/deletion notice
+            # is always about an account you do NOT own (your active accounts never get
+            # them), so trash it even when addressed to your real catch-all address —
+            # e.g. a stranger set your catch-all as their Google recovery address. Scoped
+            # to the personal-account system and spared for domains you administer; see
+            # should_lifecycle_trash().
+            lc = should_lifecycle_trash(from_addrs[0], recipients, subj)
+            if lc:
+                matches.append((uid, from_addrs[0].lower(), lc, subj))
                 sender_count[from_addrs[0].lower()] += 1
                 continue
             ra = find_match(recipients, subj)

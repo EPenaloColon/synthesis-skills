@@ -4,6 +4,16 @@ All notable changes to Synthesis Skills are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers follow [Semantic Versioning](https://semver.org/).
 
+## [3.6.3] - 2026-06-15
+
+### Changed
+
+- **`synthesis-inbox-cleanup` bumped to v1.2.4** — scoped the v1.2.3 `google_subject_trash` lifecycle-trash to Google's personal-account system only, via a new `catchall.google_lifecycle_senders` (default `accounts.google.com`). Workspace/billing senders (`workspace-noreply@google.com`, `payments-noreply@google.com`) are never matched, so admin/billing/renewal notices for a domain the user administers are never trashed — even with a "subscription is being deleted / account inactive" subject. The decision moved into a unit-testable `should_lifecycle_trash()`, and notices naming a protected domain (`spare_subject_keywords`) stay spared as a second layer.
+
+### Rationale
+
+v1.2.3 matched any Google sender by subject. A domain administrator receives genuine lifecycle/billing notices for managed domains from Workspace and Payments senders, addressed to their catch-all — so a future suspension/deletion notice could have been trashed. Real mail confirmed these arrive from `workspace-noreply@google.com` / `payments-noreply@google.com`, distinct from the `accounts.google.com` personal-account system that sends the stranger-recovery notices; scoping by sender removes the risk without weakening the stranger-recovery cleanup.
+
 ## [3.6.2] - 2026-06-15
 
 ### Added
