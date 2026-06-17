@@ -67,6 +67,14 @@ if ! python3 -c 'import yaml' 2>/dev/null; then
     echo ""
 fi
 
+# Verify certifi — CA bundle for verified IMAP TLS (python.org Python lacks one)
+if ! python3 -c 'import certifi' 2>/dev/null; then
+    echo ""
+    echo "⚠️  certifi not installed. Verified IMAP TLS needs a CA bundle."
+    echo "   Install with: pip3 install --user certifi"
+    echo ""
+fi
+
 # Check for Keychain credential
 if ! security find-generic-password -s inbox-cleanup-imap -w >/dev/null 2>&1; then
     echo "⚠️  No IMAP password found in Keychain (service: inbox-cleanup-imap)."

@@ -131,11 +131,28 @@ def resolve(name, addr, domain, subject):
     return "keep", "unmatched"
 
 
+def _ssl_context():
+    """Verifying TLS context (certificate-chain + hostname).
+
+    The python.org macOS Python ships without a usable system CA store, so
+    `ssl.create_default_context()` alone fails to verify. Prefer certifi's
+    bundle when it is installed; fall back to the system default otherwise.
+    """
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
 def connect(readonly=True):
     pw = get_password()
-    # Explicit default context: certificate-chain + hostname verification,
-    # independent of the host Python's defaults.
-    M = imaplib.IMAP4_SSL(HOST, ssl_context=ssl.create_default_context())
+    try:
+        M = imaplib.IMAP4_SSL(HOST, ssl_context=_ssl_context())
+    except ssl.SSLCertVerificationError as e:
+        sys.exit(f"ERROR: TLS certificate verification failed for {HOST}: {e}\n"
+                 f"Install a CA bundle: pip3 install --user certifi (or run the "
+                 f"'Install Certificates.command' bundled with python.org Python).")
     last = None
     for u in USER_CANDIDATES:
         try:

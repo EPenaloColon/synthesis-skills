@@ -4,6 +4,16 @@ All notable changes to Synthesis Skills are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Version numbers follow [Semantic Versioning](https://semver.org/).
 
+## [3.7.1] - 2026-06-17
+
+### Fixed
+
+- **`synthesis-inbox-cleanup` bumped to v1.3.1** — the v1.3.0 explicit-TLS hardening (`ssl.create_default_context()`) broke IMAP connectivity on the python.org macOS Python, which ships without a usable system CA store: every iCloud/IMAP run failed with `CERTIFICATE_VERIFY_FAILED`. `_lib.py` now prefers certifi's CA bundle (`ssl.create_default_context(cafile=certifi.where())`) when certifi is installed, falls back to the system default otherwise, and surfaces a clear "install certifi" message if verification still fails. Certificate verification is preserved — this fixes the regression without reverting to an unverified connection. `install.sh` now checks for certifi alongside PyYAML.
+
+### Rationale
+
+The hardening was correct in intent (the pre-v1.3.0 `IMAP4_SSL(host)` default did not verify certificates) but was shipped without testing against a live IMAP connection. certifi is the standard remedy for python.org Python's missing CA store; preferring its bundle restores connectivity while keeping certificate-chain + hostname verification.
+
 ## [3.7.0] - 2026-06-16
 
 ### Changed
